@@ -1,0 +1,7 @@
+c.lex.cpp
+c.tab.hpp
+c.tab.cpp
+compile_commands.json
+.cache/
+cc
+

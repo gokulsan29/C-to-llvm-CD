@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#include "ast.h"
 #include "c.tab.hpp"
 
 extern "C" int yylex();
