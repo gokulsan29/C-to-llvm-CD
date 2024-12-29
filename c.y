@@ -1,15 +1,33 @@
 %{
 #include <cstdio>
 #include <iostream>
+
+#include "ast.h"
+
 using namespace std;
 
 // stuff from flex that bison needs to know about:
 extern "C" int yylex();
-int yyparse();
+int yyparse(translation_unit_n **root);
 extern "C" FILE *yyin;
  
-void yyerror(const char *s);
+void yyerror(translation_unit_n **root, const char *s);
 %}
+
+%code requires {
+  #include "ast.h"
+}
+
+%union {
+  ast_n* node;
+  translation_unit_n* transl_unit;
+  external_declaration_n* ext_decl;
+  function_definition_n* func_def;
+  declaration_n* decl;
+}
+
+%parse-param {translation_unit_n **root}
+
 %token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token	AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
@@ -26,6 +44,11 @@ void yyerror(const char *s);
 %token	CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
+
+%type <decl> declaration
+%type <func_def> function_definition
+%type <ext_decl> external_declaration
+%type <transl_unit> translation_unit
 
 %start translation_unit
 %%
@@ -201,9 +224,9 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';'
-	| declaration_specifiers init_declarator_list ';'
-	| static_assert_declaration
+	: declaration_specifiers ';' { $$ = new declaration_n(); }
+	| declaration_specifiers init_declarator_list ';' { $$ = new declaration_n(); }
+	| static_assert_declaration { $$ = new declaration_n(); }
 	;
 
 declaration_specifiers
@@ -517,18 +540,26 @@ jump_statement
 	;
 
 translation_unit
-	: external_declaration
-	| translation_unit external_declaration
+	: external_declaration {
+	  *root = new translation_unit_n();
+	  $$ = *root;
+	  $$->add_child($1);
+	}
+	| translation_unit external_declaration { $$->add_child($2); }
 	;
 
 external_declaration
-	: function_definition
-	| declaration
+	: function_definition { $$ = new external_declaration_n($1, nullptr); }
+	| declaration { $$ = new external_declaration_n(nullptr, $1); }
 	;
 
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
+	: declaration_specifiers declarator declaration_list compound_statement {
+    $$ = new function_definition_n();
+  }
+	| declaration_specifiers declarator compound_statement {
+    $$ = new function_definition_n();
+  }
 	;
 
 declaration_list
@@ -539,7 +570,7 @@ declaration_list
 %%
 #include <stdio.h>
 
-void yyerror(const char *s)
+void yyerror(translation_unit_n **root, const char *s)
 {
 	fflush(stdout);
 	fprintf(stderr, "*** %s\n", s);
