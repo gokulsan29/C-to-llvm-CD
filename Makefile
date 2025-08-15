@@ -1,8 +1,13 @@
+CPP = g++
+
+COMMON_DEPS = ast.h \
+							common.h \
+
 CC_DEPS = cc.cpp    \
           c.tab.cpp \
           c.lex.cpp \
-          ast.h     \
           ast.cpp   \
+          $(COMMON_DEPS)
 
 CC_LIBS = ast.cpp   \
           c.tab.cpp \
@@ -11,14 +16,14 @@ CC_LIBS = ast.cpp   \
 
 
 BISON_DEPS = c.y   \
-             ast.h \
+             $(COMMON_DEPS)
 
 FLEX_DEPS = c.l       \
             c.tab.cpp \
-            ast.h     \
+            $(COMMON_DEPS)
 
 cc: $(CC_DEPS)
-	g++ $(CC_LIBS) -lm -ll -lfl -o $@
+	$(CPP) $(CC_LIBS) -lm -ll -lfl -o $@
 
 c.tab.cpp c.tab.hpp: $(BISON_DEPS)
 	bison -o c.tab.cpp -d c.y

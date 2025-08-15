@@ -24,6 +24,8 @@ void yyerror(translation_unit_n **root, const char *s);
   external_declaration_n* ext_decl;
   function_definition_n* func_def;
   declaration_n* decl;
+  declaration_specifiers_n* decl_specs;
+  declaration_specifier_n* decl_spec;
 }
 
 %parse-param {translation_unit_n **root}
@@ -45,6 +47,8 @@ void yyerror(translation_unit_n **root, const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%type <decl_spec> storage_class_specifier type_specifier type_qualifier function_specifier /* alignment_specifier */
+%type <decl_specs> declaration_specifiers;
 %type <decl> declaration
 %type <func_def> function_definition
 %type <ext_decl> external_declaration
@@ -67,9 +71,9 @@ constant
 	| ENUMERATION_CONSTANT	/* after it has been defined as such */
 	;
 
-enumeration_constant		/* before it has been defined as such */
-	: IDENTIFIER
-	;
+//enumeration_constant		/* before it has been defined as such */
+//  : IDENTIFIER
+//  ;
 
 string
 	: STRING_LITERAL
@@ -224,22 +228,46 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';' { $$ = new declaration_n(); }
-	| declaration_specifiers init_declarator_list ';' { $$ = new declaration_n(); }
-	| static_assert_declaration { $$ = new declaration_n(); }
+	: declaration_specifiers ';' { $$ = new declaration_n($1); }
+	| declaration_specifiers init_declarator_list ';' { $$ = new declaration_n($1); }
+	// | static_assert_declaration
 	;
 
 declaration_specifiers
-	: storage_class_specifier declaration_specifiers
-	| storage_class_specifier
-	| type_specifier declaration_specifiers
-	| type_specifier
-	| type_qualifier declaration_specifiers
-	| type_qualifier
-	| function_specifier declaration_specifiers
-	| function_specifier
-	| alignment_specifier declaration_specifiers
-	| alignment_specifier
+	: storage_class_specifier declaration_specifiers {
+	  $$ = $2;
+	  $$->add_child_front($1);
+	}
+	| storage_class_specifier {
+	  $$ = new declaration_specifiers_n();
+	  $$->add_child($1);
+	}
+	| type_specifier declaration_specifiers {
+	  $$ = $2;
+	  $$->add_child_front($1);
+	}
+	| type_specifier {
+	  $$ = new declaration_specifiers_n();
+	  $$->add_child($1);
+	}
+	| type_qualifier declaration_specifiers {
+	  $$ = $2;
+	  $$->add_child_front($1);
+	}
+	| type_qualifier {
+    $$ = new declaration_specifiers_n();
+    $$->add_child($1);
+  }
+	| function_specifier declaration_specifiers {
+	  $$ = $2;
+	  $$->add_child_front($1);
+	}
+	| function_specifier {
+	  $$ = new declaration_specifiers_n();
+	  $$->add_child($1);
+	}
+	// | alignment_specifier declaration_specifiers
+	// | alignment_specifier
 	;
 
 init_declarator_list
@@ -253,54 +281,54 @@ init_declarator
 	;
 
 storage_class_specifier
-	: TYPEDEF	/* identifiers must be flagged as TYPEDEF_NAME */
-	| EXTERN
-	| STATIC
-	| THREAD_LOCAL
-	| AUTO
-	| REGISTER
+	: TYPEDEF { $$ = new declaration_specifier_n(specifier::TYPEDEF); }	/* identifiers must be flagged as TYPEDEF_NAME */
+	| EXTERN { $$ = new declaration_specifier_n(specifier::EXTERN); }
+	| STATIC { $$ = new declaration_specifier_n(specifier::STATIC); }
+	| THREAD_LOCAL { $$ = new declaration_specifier_n(specifier::THREAD_LOCAL); }
+	| AUTO { $$ = new declaration_specifier_n(specifier::AUTO); }
+	| REGISTER { $$ = new declaration_specifier_n(specifier::RESTRICT); }
 	;
 
 type_specifier
-	: VOID
-	| CHAR
-	| SHORT
-	| INT
-	| LONG
-	| FLOAT
-	| DOUBLE
-	| SIGNED
-	| UNSIGNED
-	| BOOL
-	| COMPLEX
-	| IMAGINARY	  	/* non-mandated extension */
-	| atomic_type_specifier
-	| struct_or_union_specifier
-	| enum_specifier
-	| TYPEDEF_NAME		/* after it has been defined as such */
+	: VOID { $$ = new declaration_specifier_n(specifier::VOID); }
+	| CHAR { $$ = new declaration_specifier_n(specifier::CHAR); }
+	| SHORT { $$ = new declaration_specifier_n(specifier::SHORT); }
+	| INT { $$ = new declaration_specifier_n(specifier::INT); }
+	| LONG { $$ = new declaration_specifier_n(specifier::LONG); }
+	| FLOAT { $$ = new declaration_specifier_n(specifier::FLOAT); }
+	| DOUBLE { $$ = new declaration_specifier_n(specifier::DOUBLE); }
+	| SIGNED { $$ = new declaration_specifier_n(specifier::SIGNED); }
+	| UNSIGNED { $$ = new declaration_specifier_n(specifier::UNSIGNED); }
+	| BOOL { $$ = new declaration_specifier_n(specifier::BOOL); }
+	| COMPLEX { $$ = new declaration_specifier_n(specifier::COMPLEX); }
+	| IMAGINARY { $$ = new declaration_specifier_n(specifier::IMAGINARY); }	  	/* non-mandated extension */
+	// | atomic_type_specifier
+	// | struct_or_union_specifier
+	// | enum_specifier
+	// | TYPEDEF_NAME		/* after it has been defined as such */
 	;
 
-struct_or_union_specifier
-	: struct_or_union '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER
-	;
+//struct_or_union_specifier
+//	: struct_or_union '{' struct_declaration_list '}'
+//	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
+//	| struct_or_union IDENTIFIER
+//	;
 
-struct_or_union
-	: STRUCT
-	| UNION
-	;
+//struct_or_union
+//	: STRUCT
+//	| UNION
+//	;
 
-struct_declaration_list
-	: struct_declaration
-	| struct_declaration_list struct_declaration
-	;
+//struct_declaration_list
+//	: struct_declaration
+//	| struct_declaration_list struct_declaration
+//	;
 
-struct_declaration
-	: specifier_qualifier_list ';'	/* for anonymous struct/union */
-	| specifier_qualifier_list struct_declarator_list ';'
-	| static_assert_declaration
-	;
+//struct_declaration
+//	: specifier_qualifier_list ';'	/* for anonymous struct/union */
+//	| specifier_qualifier_list struct_declarator_list ';'
+//	| static_assert_declaration
+//	;
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
@@ -309,55 +337,55 @@ specifier_qualifier_list
 	| type_qualifier
 	;
 
-struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list ',' struct_declarator
-	;
+//struct_declarator_list
+//	: struct_declarator
+//	| struct_declarator_list ',' struct_declarator
+//	;
 
-struct_declarator
-	: ':' constant_expression
-	| declarator ':' constant_expression
-	| declarator
-	;
+//struct_declarator
+//	: ':' constant_expression
+//	| declarator ':' constant_expression
+//	| declarator
+//	;
 
-enum_specifier
-	: ENUM '{' enumerator_list '}'
-	| ENUM '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER '{' enumerator_list '}'
-	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER
-	;
+//enum_specifier
+//	: ENUM '{' enumerator_list '}'
+//	| ENUM '{' enumerator_list ',' '}'
+//	| ENUM IDENTIFIER '{' enumerator_list '}'
+//	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
+//	| ENUM IDENTIFIER
+//	;
 
-enumerator_list
-	: enumerator
-	| enumerator_list ',' enumerator
-	;
+//enumerator_list
+//	: enumerator
+//	| enumerator_list ',' enumerator
+//	;
 
-enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
-	: enumeration_constant '=' constant_expression
-	| enumeration_constant
-	;
+//enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
+//	: enumeration_constant '=' constant_expression
+//	| enumeration_constant
+//	;
 
-atomic_type_specifier
-	: ATOMIC '(' type_name ')'
-	;
+//atomic_type_specifier
+//	: ATOMIC '(' type_name ')'
+//	;
 
 type_qualifier
-	: CONST
-	| RESTRICT
-	| VOLATILE
-	| ATOMIC
+	: CONST { $$ = new declaration_specifier_n(specifier::CONST); }
+	| RESTRICT { $$ = new declaration_specifier_n(specifier::RESTRICT); }
+	| VOLATILE { $$ = new declaration_specifier_n(specifier::VOLATILE); }
+	| ATOMIC { $$ = new declaration_specifier_n(specifier::ATOMIC); }
 	;
 
 function_specifier
-	: INLINE
-	| NORETURN
+	: INLINE { $$ = new declaration_specifier_n(specifier::INLINE); }
+	| NORETURN { $$ = new declaration_specifier_n(specifier::NORETURN); }
 	;
 
-alignment_specifier
-	: ALIGNAS '(' type_name ')'
-	| ALIGNAS '(' constant_expression ')'
-	;
+//alignment_specifier
+//	: ALIGNAS '(' type_name ')'
+//	| ALIGNAS '(' constant_expression ')'
+//	;
 
 declarator
 	: pointer direct_declarator
@@ -477,9 +505,9 @@ designator
 	| '.' IDENTIFIER
 	;
 
-static_assert_declaration
-	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';'
-	;
+//static_assert_declaration
+//	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';'
+//	;
 
 statement
 	: labeled_statement
@@ -549,16 +577,16 @@ translation_unit
 	;
 
 external_declaration
-	: function_definition { $$ = new external_declaration_n($1, nullptr); }
-	| declaration { $$ = new external_declaration_n(nullptr, $1); }
+	: function_definition { $$ = new external_declaration_n($1); }
+	| declaration { $$ = new external_declaration_n($1); }
 	;
 
 function_definition
 	: declaration_specifiers declarator declaration_list compound_statement {
-    $$ = new function_definition_n();
+    $$ = new function_definition_n($1);
   }
 	| declaration_specifiers declarator compound_statement {
-    $$ = new function_definition_n();
+    $$ = new function_definition_n($1);
   }
 	;
 
