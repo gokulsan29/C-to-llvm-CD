@@ -29,7 +29,7 @@ main(int argc, char **argv)
 
   translation_unit_n *root = nullptr;
   int ret = yyparse(&root);
-  std::cout << root->to_string() << "\n";
+  std::cout << root->to_string_ast() << "\n";
   printf("retv = %d\n", ret);
   exit(0);
 }

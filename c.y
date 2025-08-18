@@ -19,7 +19,7 @@ void yyerror(translation_unit_n **root, const char *s);
 }
 
 %union {
-  ast_n* node;
+  char* lex_val;
   translation_unit_n* transl_unit;
   external_declaration_n* ext_decl;
   function_definition_n* func_def;
@@ -266,8 +266,8 @@ declaration_specifiers
 	  $$ = new declaration_specifiers_n();
 	  $$->add_child($1);
 	}
-	// | alignment_specifier declaration_specifiers
-	// | alignment_specifier
+//	| alignment_specifier declaration_specifiers
+//	| alignment_specifier
 	;
 
 init_declarator_list
@@ -388,32 +388,32 @@ function_specifier
 //	;
 
 declarator
-	: pointer direct_declarator
-	| direct_declarator
+//	: pointer direct_declarator
+	: direct_declarator
 	;
 
 direct_declarator
 	: IDENTIFIER
 	| '(' declarator ')'
-	| direct_declarator '[' ']'
-	| direct_declarator '[' '*' ']'
-	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
-	| direct_declarator '[' STATIC assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list '*' ']'
-	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list ']'
-	| direct_declarator '[' assignment_expression ']'
+//	| direct_declarator '[' ']'
+//	| direct_declarator '[' '*' ']'
+//	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
+//	| direct_declarator '[' STATIC assignment_expression ']'
+//	| direct_declarator '[' type_qualifier_list '*' ']'
+//	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']'
+//	| direct_declarator '[' type_qualifier_list assignment_expression ']'
+//	| direct_declarator '[' type_qualifier_list ']'
+//	| direct_declarator '[' assignment_expression ']'
 	| direct_declarator '(' parameter_type_list ')'
 	| direct_declarator '(' ')'
 	| direct_declarator '(' identifier_list ')'
 	;
 
 pointer
-	: '*' type_qualifier_list pointer
-	| '*' type_qualifier_list
-	| '*' pointer
-	| '*'
+//	: '*' type_qualifier_list pointer
+//	| '*' type_qualifier_list
+//	| '*' pointer
+	: '*'
 	;
 
 type_qualifier_list
@@ -573,7 +573,7 @@ translation_unit
 	  $$ = *root;
 	  $$->add_child($1);
 	}
-	| translation_unit external_declaration { $$->add_child($2); }
+	| translation_unit external_declaration { $$ = $1; $$->add_child($2); }
 	;
 
 external_declaration

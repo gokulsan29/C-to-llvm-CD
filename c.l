@@ -87,21 +87,21 @@ static int check_type(void);
 "_Thread_local"                         { return THREAD_LOCAL; }
 "__func__"                              { return FUNC_NAME; }
 
-{L}{A}*					{ return check_type(); }
+{L}{A}*					{ yylval.lex_val = yytext; return check_type(); }
 
-{HP}{H}+{IS}?				{ return I_CONSTANT; }
-{NZ}{D}*{IS}?				{ return I_CONSTANT; }
-"0"{O}*{IS}?				{ return I_CONSTANT; }
-{CP}?"'"([^'\\\n]|{ES})+"'"		{ return I_CONSTANT; }
+{HP}{H}+{IS}?				{ yylval.lex_val = yytext; return I_CONSTANT; }
+{NZ}{D}*{IS}?				{ yylval.lex_val = yytext; return I_CONSTANT; }
+"0"{O}*{IS}?				{ yylval.lex_val = yytext; return I_CONSTANT; }
+{CP}?"'"([^'\\\n]|{ES})+"'"		{ yylval.lex_val = yytext; return I_CONSTANT; }
 
-{D}+{E}{FS}?				{ return F_CONSTANT; }
-{D}*"."{D}+{E}?{FS}?			{ return F_CONSTANT; }
-{D}+"."{E}?{FS}?			{ return F_CONSTANT; }
-{HP}{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}*"."{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}+"."{P}{FS}?			{ return F_CONSTANT; }
+{D}+{E}{FS}?				{ yylval.lex_val = yytext; return F_CONSTANT; }
+{D}*"."{D}+{E}?{FS}?			{ yylval.lex_val = yytext; return F_CONSTANT; }
+{D}+"."{E}?{FS}?			{ yylval.lex_val = yytext; return F_CONSTANT; }
+{HP}{H}+{P}{FS}?			{ yylval.lex_val = yytext; return F_CONSTANT; }
+{HP}{H}*"."{H}+{P}{FS}?			{ yylval.lex_val = yytext; return F_CONSTANT; }
+{HP}{H}+"."{P}{FS}?			{ yylval.lex_val = yytext; return F_CONSTANT; }
 
-({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ return STRING_LITERAL; }
+({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ yylval.lex_val = yytext; return STRING_LITERAL; }
 
 "..."					{ return ELLIPSIS; }
 ">>="					{ return RIGHT_ASSIGN; }
