@@ -26,6 +26,8 @@ void yyerror(translation_unit_n **root, const char *s);
   declaration_n* decl;
   declaration_specifiers_n* decl_specs;
   declaration_specifier_n* decl_spec;
+  init_declarator_list_n* init_decl_list;
+  init_declarator_n* init_decl;
 }
 
 %parse-param {translation_unit_n **root}
@@ -47,6 +49,8 @@ void yyerror(translation_unit_n **root, const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%type <init_decl> init_declarator
+%type <init_decl_list> init_declarator_list
 %type <decl_spec> storage_class_specifier type_specifier type_qualifier function_specifier /* alignment_specifier */
 %type <decl_specs> declaration_specifiers;
 %type <decl> declaration
@@ -229,7 +233,7 @@ constant_expression
 
 declaration
 	: declaration_specifiers ';' { $$ = new declaration_n($1); }
-	| declaration_specifiers init_declarator_list ';' { $$ = new declaration_n($1); }
+	| declaration_specifiers init_declarator_list ';' { $$ = new declaration_n($1, $2); }
 	// | static_assert_declaration
 	;
 
@@ -271,13 +275,19 @@ declaration_specifiers
 	;
 
 init_declarator_list
-	: init_declarator
-	| init_declarator_list ',' init_declarator
+	: init_declarator {
+	  $$ = new init_declarator_list_n();
+	  $$->add_child($1);
+	}
+	| init_declarator_list ',' init_declarator {
+	  $$ = $1;
+	  $$->add_child($3);
+	}
 	;
 
 init_declarator
-	: declarator '=' initializer
-	| declarator
+	: declarator '=' initializer { $$ = new init_declarator_n(); }
+	| declarator { $$ = new init_declarator_n(); }
 	;
 
 storage_class_specifier
@@ -388,8 +398,8 @@ function_specifier
 //	;
 
 declarator
-//	: pointer direct_declarator
-	: direct_declarator
+	: pointer direct_declarator
+	| direct_declarator
 	;
 
 direct_declarator
@@ -412,8 +422,8 @@ direct_declarator
 pointer
 //	: '*' type_qualifier_list pointer
 //	| '*' type_qualifier_list
-//	| '*' pointer
-	: '*'
+	: '*' pointer
+	| '*'
 	;
 
 type_qualifier_list

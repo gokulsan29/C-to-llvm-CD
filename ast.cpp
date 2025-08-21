@@ -90,6 +90,21 @@ declaration_specifiers_n::to_string_ast(string prefix) const
 }
 
 string
+init_declarator_n::to_string_ast(string prefix) const
+{
+  string ret = "init_declarator\n";
+  return ret;
+}
+
+string
+init_declarator_list_n::to_string_ast(string prefix) const
+{
+  string ret = "init_declarator_list\n";
+  ret += list_n<init_declarator_n>::to_string_ast(prefix + " ");
+  return ret;
+}
+
+string
 external_declaration_n::to_string_ast(string prefix) const
 {
   if (this->m_function_definition) {
@@ -119,7 +134,12 @@ string
 declaration_n::to_string_ast(string prefix) const
 {
   string ret = "declaration\n";
-  ret += prefix + this->m_declaration_specifiers->to_string_ast("|-");
+  bool has_init_declarators = this->m_init_declarator_list != nullptr;
+  string prefix_for_decl_spec = has_init_declarators ? "|-" : "`-";
+  ret += prefix + this->m_declaration_specifiers->to_string_ast(prefix + prefix_for_decl_spec);
+  if (has_init_declarators) {
+    ret += prefix + this->m_init_declarator_list->to_string_ast(prefix + prefix_for_decl_spec);
+  }
   return ret;
 }
 

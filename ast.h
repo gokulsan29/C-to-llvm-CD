@@ -94,6 +94,20 @@ private:
   } m_item;
 };
 
+class init_declarator_n : public ast_n
+{
+public:
+  string to_string_ast(string prefix="") const;
+};
+
+class init_declarator_list_n : public list_n<init_declarator_n>
+{
+public:
+  init_declarator_list_n() : list_n<init_declarator_n>() { }
+  init_declarator_list_n(vector<init_declarator_n*> l) : list_n<init_declarator_n>(l) { }
+  string to_string_ast(string prefix="") const;
+};
+
 class function_definition_n : public ast_n
 {
 public:
@@ -106,17 +120,31 @@ private:
 class declaration_n : public ast_n
 {
 public:
-  declaration_n(declaration_specifiers_n* declaration_specifiers) : m_declaration_specifiers(declaration_specifiers) { }
+  declaration_n(declaration_specifiers_n* declaration_specifiers) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_init_declarator_list(nullptr)
+  { }
+  declaration_n(declaration_specifiers_n* declaration_specifiers, init_declarator_list_n* init_declarator_list) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_init_declarator_list(init_declarator_list)
+  { }
   string to_string_ast(string prefix="") const;
 private:
   declaration_specifiers_n* m_declaration_specifiers;
+  init_declarator_list_n* m_init_declarator_list;
 };
 
 class external_declaration_n : public ast_n
 {
 public:
-  external_declaration_n(function_definition_n* function_definition) : m_function_definition(function_definition), m_declaration(nullptr) { }
-  external_declaration_n(declaration_n* declaration) : m_function_definition(nullptr), m_declaration(declaration) { }
+  external_declaration_n(function_definition_n* function_definition) :
+    m_function_definition(function_definition),
+    m_declaration(nullptr)
+  { }
+  external_declaration_n(declaration_n* declaration) :
+    m_function_definition(nullptr),
+    m_declaration(declaration)
+  { }
   string to_string_ast(string prefix="") const;
 private:
   function_definition_n* m_function_definition;
