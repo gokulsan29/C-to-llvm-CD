@@ -94,10 +94,33 @@ private:
   } m_item;
 };
 
-class init_declarator_n : public ast_n
+class declarator_n : public ast_n
 {
 public:
   string to_string_ast(string prefix="") const;
+};
+
+class initializer_n : public ast_n
+{
+public:
+  string to_string_ast(string prefix="") const;
+};
+
+class init_declarator_n : public ast_n
+{
+public:
+  init_declarator_n(declarator_n* declarator) :
+    m_declarator(declarator),
+    m_initializer(nullptr)
+  { }
+  init_declarator_n(declarator_n* declarator, initializer_n* initializer) :
+    m_declarator(declarator),
+    m_initializer(initializer)
+  { }
+  string to_string_ast(string prefix="") const;
+private:
+  declarator_n* m_declarator;
+  initializer_n* m_initializer;
 };
 
 class init_declarator_list_n : public list_n<init_declarator_n>

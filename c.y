@@ -28,6 +28,8 @@ void yyerror(translation_unit_n **root, const char *s);
   declaration_specifier_n* decl_spec;
   init_declarator_list_n* init_decl_list;
   init_declarator_n* init_decl;
+  declarator_n* declarator;
+  initializer_n* initializer;
 }
 
 %parse-param {translation_unit_n **root}
@@ -49,6 +51,8 @@ void yyerror(translation_unit_n **root, const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%type <initializer> initializer
+%type <declarator> declarator
 %type <init_decl> init_declarator
 %type <init_decl_list> init_declarator_list
 %type <decl_spec> storage_class_specifier type_specifier type_qualifier function_specifier /* alignment_specifier */
@@ -286,8 +290,8 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator '=' initializer { $$ = new init_declarator_n(); }
-	| declarator { $$ = new init_declarator_n(); }
+	: declarator '=' initializer { $$ = new init_declarator_n($1, $3); }
+	| declarator { $$ = new init_declarator_n($1); }
 	;
 
 storage_class_specifier
@@ -398,8 +402,8 @@ function_specifier
 //	;
 
 declarator
-	: pointer direct_declarator
-	| direct_declarator
+	: pointer direct_declarator { $$ = new declarator_n(); }
+	| direct_declarator { $$ = new declarator_n(); }
 	;
 
 direct_declarator
@@ -489,9 +493,9 @@ direct_abstract_declarator
 	;
 
 initializer
-	: '{' initializer_list '}'
-	| '{' initializer_list ',' '}'
-	| assignment_expression
+//	: '{' initializer_list '}'
+//	| '{' initializer_list ',' '}'
+	: assignment_expression { $$ = new initializer_n(); }
 	;
 
 initializer_list

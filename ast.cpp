@@ -77,7 +77,7 @@ declaration_specifier_n::to_string_ast(string prefix) const
 string
 declaration_specifiers_n::to_string_ast(string prefix) const
 {
-  string ret = prefix + "declaration_specifiers: ";
+  string ret = "declaration_specifiers: ";
   vector<declaration_specifier_n*> const& decl_spec_list = this->get_list();
   for(int i = 0;i < decl_spec_list.size();i++) {
     ret += decl_spec_list[i]->to_string_ast(prefix);
@@ -90,9 +90,30 @@ declaration_specifiers_n::to_string_ast(string prefix) const
 }
 
 string
+declarator_n::to_string_ast(string prefix) const
+{
+  string ret = "declarator\n";
+  return ret;
+}
+
+string
+initializer_n::to_string_ast(string prefix) const
+{
+  string ret = "initializer\n";
+  return ret;
+}
+
+string
 init_declarator_n::to_string_ast(string prefix) const
 {
   string ret = "init_declarator\n";
+  bool has_initializer = this->m_initializer != nullptr;
+  string prefix_for_declarator = has_initializer ? "|-" : "`-";
+  string child_prefix_for_declarator = has_initializer ? "| " : "  ";
+  ret += prefix + prefix_for_declarator + this->m_declarator->to_string_ast(prefix + child_prefix_for_declarator);
+  if (has_initializer) {
+    ret += prefix + "`-" + this->m_initializer->to_string_ast(prefix + "  ");
+  }
   return ret;
 }
 
@@ -100,7 +121,29 @@ string
 init_declarator_list_n::to_string_ast(string prefix) const
 {
   string ret = "init_declarator_list\n";
-  ret += list_n<init_declarator_n>::to_string_ast(prefix + " ");
+  ret += list_n<init_declarator_n>::to_string_ast(prefix);
+  return ret;
+}
+
+string
+function_definition_n::to_string_ast(string prefix) const
+{
+  string ret = "function_definition\n";
+  ret += prefix + "|-" + this->m_declaration_specifiers->to_string_ast(prefix + "| ");
+  return ret;
+}
+
+string
+declaration_n::to_string_ast(string prefix) const
+{
+  string ret = "declaration\n";
+  bool has_init_declarators = this->m_init_declarator_list != nullptr;
+  string prefix_for_decl_spec = has_init_declarators ? "|-" : "`-";
+  string child_prefix_for_decl_spec = has_init_declarators ? "| " : "  ";
+  ret += prefix + prefix_for_decl_spec + this->m_declaration_specifiers->to_string_ast(prefix + child_prefix_for_decl_spec);
+  if (has_init_declarators) {
+    ret += prefix + "`-" + this->m_init_declarator_list->to_string_ast(prefix + "  ");
+  }
   return ret;
 }
 
@@ -118,28 +161,7 @@ string
 translation_unit_n::to_string_ast(string prefix) const
 {
   string ret = "translation_unit\n";
-  ret += list_n<external_declaration_n>::to_string_ast(prefix + " ");
-  return ret;
-}
-
-string
-function_definition_n::to_string_ast(string prefix) const
-{
-  string ret = "function_definition\n";
-  ret += prefix + this->m_declaration_specifiers->to_string_ast("|-");
-  return ret;
-}
-
-string
-declaration_n::to_string_ast(string prefix) const
-{
-  string ret = "declaration\n";
-  bool has_init_declarators = this->m_init_declarator_list != nullptr;
-  string prefix_for_decl_spec = has_init_declarators ? "|-" : "`-";
-  ret += prefix + this->m_declaration_specifiers->to_string_ast(prefix + prefix_for_decl_spec);
-  if (has_init_declarators) {
-    ret += prefix + this->m_init_declarator_list->to_string_ast(prefix + prefix_for_decl_spec);
-  }
+  ret += list_n<external_declaration_n>::to_string_ast(prefix);
   return ret;
 }
 
