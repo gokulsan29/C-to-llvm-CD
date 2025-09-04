@@ -93,6 +93,13 @@ string
 declarator_n::to_string_ast(string prefix) const
 {
   string ret = "declarator\n";
+  bool has_pointer = this->m_pointer != nullptr;
+  string prefix_for_direct_decl = has_pointer ? "|-" : "`-";
+  string child_prefix_for_direct_decl = has_pointer ? "| " : "  ";
+  ret += prefix + prefix_for_direct_decl + this->m_direct_declarator->to_string_ast(prefix + child_prefix_for_direct_decl);
+  if (has_pointer) {
+    ret += prefix + "`-" + this->m_pointer->to_string_ast(prefix + "  ");
+  }
   return ret;
 }
 
@@ -100,6 +107,20 @@ string
 initializer_n::to_string_ast(string prefix) const
 {
   string ret = "initializer\n";
+  return ret;
+}
+
+string
+direct_declarator_n::to_string_ast(string prefix) const
+{
+  string ret = "direct_declarator\n";
+  return ret;
+}
+
+string
+pointer_n::to_string_ast(string prefix) const
+{
+  string ret = "pointer\n";
   return ret;
 }
 
@@ -120,7 +141,7 @@ init_declarator_n::to_string_ast(string prefix) const
 string
 init_declarator_list_n::to_string_ast(string prefix) const
 {
-  string ret = "init_declarator_list\n";
+  string ret = "init_declarator_list (size: " + std::to_string(this->get_size()) + ")\n";
   ret += list_n<init_declarator_n>::to_string_ast(prefix);
   return ret;
 }
@@ -160,7 +181,7 @@ external_declaration_n::to_string_ast(string prefix) const
 string
 translation_unit_n::to_string_ast(string prefix) const
 {
-  string ret = "translation_unit\n";
+  string ret = "translation_unit (size: " + std::to_string(this->get_size()) + ")\n";
   ret += list_n<external_declaration_n>::to_string_ast(prefix);
   return ret;
 }

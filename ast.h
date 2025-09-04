@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <stddef.h>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,7 @@ public:
   list_n(vector<T_NODE*> list) : m_list(list) { }
 
   string to_string_ast(string prefix="") const;
+  size_t get_size() const { return this->m_list.size(); }
   vector<T_NODE*> const& get_list() const { return this->m_list; }
   void add_child(T_NODE* c) { this->m_list.push_back(c); }
   void add_child_front(T_NODE* c) { this->m_list.insert(this->m_list.begin(), c); }
@@ -58,6 +60,10 @@ class declaration_specifier_n : public ast_n
 public:
   declaration_specifier_n(specifier declaration_specifier) : m_declaration_specifier(declaration_specifier) { }
   string to_string_ast(string prefix="") const;
+  bool is_type_qualifier() {
+    return m_declaration_specifier > specifier::TYPE_QUALIFIER_START &&
+           m_declaration_specifier < specifier::TYPE_QUALIFIER_END;
+  }
 private:
   specifier m_declaration_specifier;
 };
@@ -94,10 +100,35 @@ private:
   } m_item;
 };
 
-class declarator_n : public ast_n
+class direct_declarator_n : public list_n<direct_declarator_item_n>
 {
 public:
   string to_string_ast(string prefix="") const;
+};
+
+class pointer_n : public list_n<declaration_specifiers_n>
+{
+public:
+  pointer_n() : list_n<declaration_specifiers_n>() { }
+  pointer_n(vector<declaration_specifiers_n*> l) : list_n<declaration_specifiers_n>(l) { }
+  string to_string_ast(string prefix="") const;
+};
+
+class declarator_n : public ast_n
+{
+public:
+  declarator_n(pointer_n* pointer, direct_declarator_n* direct_declarator) :
+    m_pointer(pointer),
+    m_direct_declarator(direct_declarator)
+  { }
+  declarator_n(direct_declarator_n* direct_declarator) :
+    m_pointer(nullptr),
+    m_direct_declarator(direct_declarator)
+  { }
+  string to_string_ast(string prefix="") const;
+private:
+  pointer_n* m_pointer;
+  direct_declarator_n* m_direct_declarator;
 };
 
 class initializer_n : public ast_n
