@@ -1,28 +1,34 @@
-CPP = g++
+TESTS_DIR := examples
+TESTS_FILES := $(wildcard $(TESTS_DIR)/*.c)
 
-COMMON_DEPS = ast.h \
-							common.h \
+CPP := g++
 
-CC_DEPS = cc.cpp    \
+COMMON_DEPS := ast.h \
+							common.h
+
+CC_DEPS := cc.cpp \
           c.tab.cpp \
           c.lex.cpp \
-          ast.cpp   \
+          ast.cpp \
           $(COMMON_DEPS)
 
-CC_LIBS = ast.cpp   \
+CC_LIBS := ast.cpp \
           c.tab.cpp \
           c.lex.cpp \
-          cc.cpp    \
+          cc.cpp
 
-
-BISON_DEPS = c.y   \
+BISON_DEPS := c.y \
              $(COMMON_DEPS)
 
-FLEX_DEPS = c.l       \
+FLEX_DEPS = c.l \
             c.tab.cpp \
             $(COMMON_DEPS)
 
-cc: $(CC_DEPS)
+OUTPUT := cc
+
+.PHONY: clean test
+
+$(OUTPUT): $(CC_DEPS)
 	$(CPP) $(CC_LIBS) -lm -ll -lfl -o $@
 
 c.tab.cpp c.tab.hpp: $(BISON_DEPS)
@@ -30,6 +36,9 @@ c.tab.cpp c.tab.hpp: $(BISON_DEPS)
 
 c.lex.cpp: $(FLEX_DEPS)
 	flex -o c.lex.cpp -l c.l
+
+test: $(OUTPUT)
+	@$(foreach TEST,$(TESTS_FILES), ./$(OUTPUT) $(TEST);)
 
 clean::
 	rm -f c.tab.cpp c.tab.hpp c.lex.cpp cc c.output
