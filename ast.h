@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+
 #include <stddef.h>
 #include <string>
 #include <vector>
@@ -11,9 +11,11 @@ using namespace std;
 // Enum for declaration specifiers
 enum class specifier {
   // storage class specifiers
-  STORAGE_CLASS_SPECIFIER_START, TYPEDEF, EXTERN, STATIC, THREAD_LOCAL, AUTO, REGISTER, STORAGE_CLASS_SPECIFIER_END,
+  STORAGE_CLASS_SPECIFIER_START, TYPEDEF, EXTERN, STATIC, THREAD_LOCAL, AUTO, REGISTER,
+  STORAGE_CLASS_SPECIFIER_END,
   // type specifiers
-  TYPE_SPECIFIER_START, VOID, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE, SIGNED, UNSIGNED, BOOL, COMPLEX, IMAGINARY, STRUCT, UNION, ENUM, TYPE_SPECIFIER_END,
+  TYPE_SPECIFIER_START, VOID, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE, SIGNED, UNSIGNED, BOOL,
+  COMPLEX, IMAGINARY, STRUCT, UNION, ENUM, TYPE_SPECIFIER_END,
   // type qualfiers
   TYPE_QUALIFIER_START, CONST, RESTRICT, VOLATILE, ATOMIC, TYPE_QUALIFIER_END,
   // function specifiers
@@ -26,6 +28,7 @@ class ast_n
 {
 public:
   string to_string_ast(string prefix="") const { NOT_IMPLEMENTED(); }
+  virtual ~ast_n() { }
 };
 
 template <typename T_NODE>
@@ -58,8 +61,12 @@ private:
 class declaration_specifier_n : public ast_n
 {
 public:
-  declaration_specifier_n(specifier declaration_specifier) : m_declaration_specifier(declaration_specifier) { }
+  declaration_specifier_n(specifier declaration_specifier) :
+    m_declaration_specifier(declaration_specifier)
+  { }
   string to_string_ast(string prefix="") const;
+
+  specifier get_declaration_specifier() const { return m_declaration_specifier; }
   bool is_type_qualifier() {
     return m_declaration_specifier > specifier::TYPE_QUALIFIER_START &&
            m_declaration_specifier < specifier::TYPE_QUALIFIER_END;
@@ -84,25 +91,64 @@ public:
   string const& get_identifier_name() const { return this->get_str(); }
 };
 
+class declarator_n;
+class parameter_declaration_n : public ast_n
+{
+public:
+  parameter_declaration_n(declaration_specifiers_n* declaration_specifiers) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_declarator(nullptr)
+  { }
+  parameter_declaration_n(declaration_specifiers_n* declaration_specifiers,
+                          declarator_n* declarator) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_declarator(declarator)
+  { }
+  string to_string_ast(string prefix="") const;
+private:
+  declaration_specifiers_n* m_declaration_specifiers;
+  declarator_n* m_declarator;
+};
+
+class parameter_list_n : public list_n<parameter_declaration_n>
+{
+public:
+  parameter_list_n() : list_n<parameter_declaration_n>() { }
+  parameter_list_n(vector<parameter_declaration_n*> l) : list_n<parameter_declaration_n>(l) { }
+
+  bool get_is_vararg() const { return m_is_vararg; }
+  void set_is_vararg(bool is_vararg) { m_is_vararg = is_vararg; }
+  string to_string_ast(string prefix="") const;
+private:
+  bool m_is_vararg = false;
+};
+
+
 class direct_declarator_item_n : public ast_n
 {
 public:
   enum item_opt_t
   {
-    IDENTIFIER
+    IDENTIFIER,
+    PARMETER_LIST
   };
+  direct_declarator_item_n(identifier_n* identifier) :
+    m_item_opt(IDENTIFIER), m_item(identifier)
+  { }
+  direct_declarator_item_n(parameter_list_n* parameter_list) :
+    m_item_opt(PARMETER_LIST), m_item(parameter_list)
+  { }
   string to_string_ast(string prefix="") const;
 private:
   item_opt_t m_item_opt;
-  union
-  {
-    identifier_n* id_node;
-  } m_item;
+  ast_n* m_item;
 };
 
 class direct_declarator_n : public list_n<direct_declarator_item_n>
 {
 public:
+  direct_declarator_n() : list_n<direct_declarator_item_n>() { }
+  direct_declarator_n(vector<direct_declarator_item_n*> l) : list_n<direct_declarator_item_n>(l) { }
   string to_string_ast(string prefix="") const;
 };
 
@@ -165,10 +211,15 @@ public:
 class function_definition_n : public ast_n
 {
 public:
-  function_definition_n(declaration_specifiers_n* declaration_specifiers) : m_declaration_specifiers(declaration_specifiers) { }
+  function_definition_n(declaration_specifiers_n* declaration_specifiers,
+                        declarator_n* declarator) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_declarator(declarator)
+  { }
   string to_string_ast(string prefix="") const;
 private:
   declaration_specifiers_n* m_declaration_specifiers;
+  declarator_n* m_declarator;
 };
 
 class declaration_n : public ast_n
@@ -178,7 +229,8 @@ public:
     m_declaration_specifiers(declaration_specifiers),
     m_init_declarator_list(nullptr)
   { }
-  declaration_n(declaration_specifiers_n* declaration_specifiers, init_declarator_list_n* init_declarator_list) :
+  declaration_n(declaration_specifiers_n* declaration_specifiers,
+                init_declarator_list_n* init_declarator_list) :
     m_declaration_specifiers(declaration_specifiers),
     m_init_declarator_list(init_declarator_list)
   { }
@@ -209,7 +261,9 @@ class translation_unit_n : public list_n<external_declaration_n>
 {
 public:
   translation_unit_n() : list_n<external_declaration_n>() { }
-  translation_unit_n(vector<external_declaration_n*> l) : list_n<external_declaration_n>(l) { }
+  translation_unit_n(vector<external_declaration_n*> l) :
+    list_n<external_declaration_n>(l)
+  { }
   string to_string_ast(string prefix="") const;
 };
 

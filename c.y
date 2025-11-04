@@ -34,11 +34,14 @@ void yyerror(translation_unit_n **root, const char *s);
   initializer_n* initializer;
   pointer_n* pointer;
   direct_declarator_n* dir_decl;
+  parameter_list_n* param_list;
+  parameter_declaration_n* param_decl;
 }
 
 %parse-param {translation_unit_n **root}
 
-%token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
+%token  <lex_val> IDENTIFIER
+%token  I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token	AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token	SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
@@ -55,6 +58,8 @@ void yyerror(translation_unit_n **root, const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%type <param_decl> parameter_declaration
+%type <param_list> parameter_type_list parameter_list
 %type <dir_decl> direct_declarator
 %type <pointer> pointer
 %type <initializer> initializer
@@ -322,10 +327,10 @@ type_specifier
 	| BOOL { $$ = new declaration_specifier_n(specifier::BOOL); }
 	| COMPLEX { $$ = new declaration_specifier_n(specifier::COMPLEX); }
 	| IMAGINARY { $$ = new declaration_specifier_n(specifier::IMAGINARY); }	  	/* non-mandated extension */
-	// | atomic_type_specifier
-	// | struct_or_union_specifier
-	// | enum_specifier
-	// | TYPEDEF_NAME		/* after it has been defined as such */
+//	| atomic_type_specifier
+//	| struct_or_union_specifier
+//	| enum_specifier
+//	| TYPEDEF_NAME		/* after it has been defined as such */
 	;
 
 //struct_or_union_specifier
@@ -413,7 +418,12 @@ declarator
 	;
 
 direct_declarator
-	: IDENTIFIER { $$ = new direct_declarator_n(); }
+	: IDENTIFIER {
+	  $$ = new direct_declarator_n();
+	  identifier_n* id = new identifier_n($1);
+	  direct_declarator_item_n* item = new direct_declarator_item_n(id);
+	  $$->add_child(item);
+	}
 //	| '(' declarator ')'
 //	| direct_declarator '[' ']'
 //	| direct_declarator '[' '*' ']'
@@ -426,13 +436,13 @@ direct_declarator
 //	| direct_declarator '[' assignment_expression ']'
 	| direct_declarator '(' parameter_type_list ')' {
 	  $$ = $1;
+	  direct_declarator_item_n* item = new direct_declarator_item_n($3);
+	  $$->add_child(item);
 	}
 	| direct_declarator '(' ')' {
 	  $$ = $1;
   }
-	| direct_declarator '(' identifier_list ')' {
-    $$ = $1;
-  }
+//	| direct_declarator '(' identifier_list ')'
 	;
 
 pointer
@@ -469,25 +479,34 @@ type_qualifier_list
 
 
 parameter_type_list
-	: parameter_list ',' ELLIPSIS
-	| parameter_list
+	: parameter_list ',' ELLIPSIS {
+	  $$ = $1;
+	  $$->set_is_vararg(true);
+	}
+	| parameter_list {
+    $$ = $1;
+    $$->set_is_vararg(false);
+  }
 	;
 
 parameter_list
-	: parameter_declaration
-	| parameter_list ',' parameter_declaration
+	: parameter_declaration { $$ = new parameter_list_n(); $$->add_child($1); }
+	| parameter_list ',' parameter_declaration {
+    $$ = $1;
+    $$->add_child($3);
+  }
 	;
 
 parameter_declaration
-	: declaration_specifiers declarator
-	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	: declaration_specifiers declarator { $$ = new parameter_declaration_n($1, $2); }
+//	| declaration_specifiers abstract_declarator
+	| declaration_specifiers { $$ = new parameter_declaration_n($1); }
 	;
 
-identifier_list
-	: IDENTIFIER
-	| identifier_list ',' IDENTIFIER
-	;
+//identifier_list
+//	: IDENTIFIER
+//	| identifier_list ',' IDENTIFIER
+//	;
 
 type_name
 	: specifier_qualifier_list abstract_declarator
@@ -628,18 +647,16 @@ external_declaration
 	;
 
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement {
-    $$ = new function_definition_n($1);
-  }
-	| declaration_specifiers declarator compound_statement {
-    $$ = new function_definition_n($1);
+//	: declaration_specifiers declarator declaration_list compound_statement
+	: declaration_specifiers declarator compound_statement {
+    $$ = new function_definition_n($1, $2);
   }
 	;
 
-declaration_list
-	: declaration
-	| declaration_list declaration
-	;
+//declaration_list
+//	: declaration
+//	| declaration_list declaration
+//	;
 
 %%
 #include <stdio.h>
