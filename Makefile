@@ -29,7 +29,7 @@ OUTPUT := cc
 .PHONY: clean test
 
 $(OUTPUT): $(CC_DEPS)
-	$(CPP) $(CC_LIBS) -lm -ll -lfl -o $@
+	$(CPP) $(CC_LIBS) -O2 -lm -ll -lfl -o $@
 
 c.tab.cpp c.tab.hpp: $(BISON_DEPS)
 	bison -o c.tab.cpp -d c.y

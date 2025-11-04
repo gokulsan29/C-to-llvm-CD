@@ -115,11 +115,11 @@ string
 direct_declarator_item_n::to_string_ast(string prefix) const
 {
   switch (this->m_item_opt) {
-    case IDENTIFIER: {
+    case direct_declarator_item_n::IDENTIFIER: {
       identifier_n* identifier = dynamic_cast<identifier_n*>(this->m_item);
       return identifier->to_string_ast(prefix);
     }
-    case PARMETER_LIST: {
+    case direct_declarator_item_n::PARMETER_LIST: {
       parameter_list_n* parameter_list = dynamic_cast<parameter_list_n*>(this->m_item);
       return parameter_list->to_string_ast(prefix);
     }
@@ -192,7 +192,36 @@ string
 init_declarator_list_n::to_string_ast(string prefix) const
 {
   string ret = "init_declarator_list (size: " + std::to_string(this->get_size()) + ")";
-  ret += list_n<init_declarator_n>::to_string_ast(prefix);
+  ret += this->list_n<init_declarator_n>::to_string_ast(prefix);
+  return ret;
+}
+
+string
+statement_n::to_string_ast(string prefix) const
+{
+  string ret = "statement";
+  return ret;
+}
+
+string
+block_item_n::to_string_ast(string prefix) const
+{
+  if (this->m_declaration) {
+    return this->m_declaration->to_string_ast(prefix);
+  }
+  assert(this->m_statement);
+  return this->m_statement->to_string_ast(prefix);
+}
+
+string
+compound_statement_n::to_string_ast(string prefix) const
+{
+  string ret = "compound_statement";
+  if (this->get_size() == 0) {
+    ret += " EMPTY";
+    return ret;
+  }
+  ret += this->list_n<block_item_n>::to_string_ast(prefix);
   return ret;
 }
 
@@ -202,6 +231,7 @@ function_definition_n::to_string_ast(string prefix) const
   string ret = "function_definition";
   ret += "\n" + prefix + "|-" + this->m_declaration_specifiers->to_string_ast(prefix + "| ");
   ret += "\n" + prefix + "|-" + this->m_declarator->to_string_ast(prefix + "| ");
+  ret += "\n" + prefix + "`-" + this->m_compound_statement->to_string_ast(prefix + "  ");
   return ret;
 }
 

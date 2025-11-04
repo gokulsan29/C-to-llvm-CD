@@ -208,18 +208,11 @@ public:
   string to_string_ast(string prefix="") const;
 };
 
-class function_definition_n : public ast_n
+class statement_n : public ast_n
 {
 public:
-  function_definition_n(declaration_specifiers_n* declaration_specifiers,
-                        declarator_n* declarator) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_declarator(declarator)
-  { }
+  statement_n() { }
   string to_string_ast(string prefix="") const;
-private:
-  declaration_specifiers_n* m_declaration_specifiers;
-  declarator_n* m_declarator;
 };
 
 class declaration_n : public ast_n
@@ -238,6 +231,42 @@ public:
 private:
   declaration_specifiers_n* m_declaration_specifiers;
   init_declarator_list_n* m_init_declarator_list;
+};
+
+class block_item_n : public ast_n
+{
+public:
+  block_item_n(declaration_n* declaration) : m_declaration(declaration), m_statement(nullptr) { }
+  block_item_n(statement_n* statement) : m_declaration(nullptr), m_statement(statement) { }
+  string to_string_ast(string prefix="") const;
+private:
+  declaration_n* m_declaration;
+  statement_n* m_statement;
+};
+
+class compound_statement_n : public list_n<block_item_n>
+{
+public:
+  compound_statement_n() : list_n<block_item_n>() { }
+  compound_statement_n(vector<block_item_n*> l) : list_n<block_item_n>(l) { }
+  string to_string_ast(string prefix="") const;
+};
+
+class function_definition_n : public ast_n
+{
+public:
+  function_definition_n(declaration_specifiers_n* declaration_specifiers,
+                        declarator_n* declarator,
+                        compound_statement_n* compound_statement) :
+    m_declaration_specifiers(declaration_specifiers),
+    m_declarator(declarator),
+    m_compound_statement(compound_statement)
+  { }
+  string to_string_ast(string prefix="") const;
+private:
+  declaration_specifiers_n* m_declaration_specifiers;
+  declarator_n* m_declarator;
+  compound_statement_n* m_compound_statement;
 };
 
 class external_declaration_n : public ast_n

@@ -36,6 +36,9 @@ void yyerror(translation_unit_n **root, const char *s);
   direct_declarator_n* dir_decl;
   parameter_list_n* param_list;
   parameter_declaration_n* param_decl;
+  statement_n* stmt;
+  compound_statement_n* compound_stmt;
+  block_item_n* block_item;
 }
 
 %parse-param {translation_unit_n **root}
@@ -58,11 +61,13 @@ void yyerror(translation_unit_n **root, const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%type <block_item> block_item
+%type <compound_stmt> compound_statement block_item_list
+%type <stmt> statement
 %type <param_decl> parameter_declaration
 %type <param_list> parameter_type_list parameter_list
 %type <dir_decl> direct_declarator
 %type <pointer> pointer
-%type <initializer> initializer
 %type <declarator> declarator
 %type <init_decl> init_declarator
 %type <init_decl_list> init_declarator_list
@@ -115,15 +120,15 @@ generic_association
 
 postfix_expression
 	: primary_expression
-	| postfix_expression '[' expression ']'
+//	| postfix_expression '[' expression ']'
 	| postfix_expression '(' ')'
 	| postfix_expression '(' argument_expression_list ')'
-	| postfix_expression '.' IDENTIFIER
-	| postfix_expression PTR_OP IDENTIFIER
+//	| postfix_expression '.' IDENTIFIER
+//	| postfix_expression PTR_OP IDENTIFIER
 	| postfix_expression INC_OP
 	| postfix_expression DEC_OP
-	| '(' type_name ')' '{' initializer_list '}'
-	| '(' type_name ')' '{' initializer_list ',' '}'
+//	| '(' type_name ')' '{' initializer_list '}'
+//	| '(' type_name ')' '{' initializer_list ',' '}'
 	;
 
 argument_expression_list
@@ -136,9 +141,9 @@ unary_expression
 	| INC_OP unary_expression
 	| DEC_OP unary_expression
 	| unary_operator cast_expression
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
-	| ALIGNOF '(' type_name ')'
+//	| SIZEOF unary_expression
+//	| SIZEOF '(' type_name ')'
+//	| ALIGNOF '(' type_name ')'
 	;
 
 unary_operator
@@ -242,9 +247,9 @@ expression
 	| expression ',' assignment_expression
 	;
 
-constant_expression
-	: conditional_expression	/* with constraints */
-	;
+//constant_expression
+//	: conditional_expression	/* with constraints */
+//	;
 
 declaration
 	: declaration_specifiers ';' { $$ = new declaration_n($1); }
@@ -301,7 +306,7 @@ init_declarator_list
 	;
 
 init_declarator
-//	: declarator '=' initializer { $$ = new init_declarator_n($1, $3); }
+//  : declarator '=' initializer { $$ = new init_declarator_n($1, $3); }
 	: declarator { $$ = new init_declarator_n($1); }
 	;
 
@@ -543,65 +548,71 @@ direct_abstract_declarator
 	| direct_abstract_declarator '(' parameter_type_list ')'
 	;
 
-initializer
+//initializer
 //	: '{' initializer_list '}'
 //	| '{' initializer_list ',' '}'
-	: assignment_expression { $$ = new initializer_n(); }
-	;
+//	: assignment_expression { $$ = new initializer_n(); }
+//	;
 
-initializer_list
-	: designation initializer
-	| initializer
-	| initializer_list ',' designation initializer
-	| initializer_list ',' initializer
-	;
+//initializer_list
+//	: designation initializer
+//	| initializer
+//	| initializer_list ',' designation initializer
+//	| initializer_list ',' initializer
+//	;
 
-designation
-	: designator_list '='
-	;
+//designation
+//	: designator_list '='
+//	;
 
-designator_list
-	: designator
-	| designator_list designator
-	;
+//designator_list
+//	: designator
+//	| designator_list designator
+//	;
 
-designator
-	: '[' constant_expression ']'
-	| '.' IDENTIFIER
-	;
+//designator
+//	: '[' constant_expression ']'
+//	| '.' IDENTIFIER
+//	;
 
 //static_assert_declaration
 //	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';'
 //	;
 
 statement
-	: labeled_statement
-	| compound_statement
-	| expression_statement
-	| selection_statement
-	| iteration_statement
-	| jump_statement
+//	: labeled_statement { $$ = new statement_n(); }
+	: compound_statement { $$ = new statement_n(); }
+	| expression_statement { $$ = new statement_n(); }
+//	| selection_statement { $$ = new statement_n(); }
+//	| iteration_statement { $$ = new statement_n(); }
+	| jump_statement { $$ = new statement_n(); }
 	;
 
-labeled_statement
-	: IDENTIFIER ':' statement
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
-	;
+//labeled_statement
+//	: IDENTIFIER ':' statement
+//	| CASE constant_expression ':' statement
+//	| DEFAULT ':' statement
+//	;
 
 compound_statement
-	: '{' '}'
-	| '{'  block_item_list '}'
+	: '{' '}' { $$ = new compound_statement_n(); }
+  | '{'  block_item_list '}' { $$ = $2; }
 	;
 
 block_item_list
-	: block_item
-	| block_item_list block_item
+	: block_item {
+	  $$ = new compound_statement_n();
+	  $$->add_child($1);
+	}
+	| block_item_list block_item {
+    $$ = $1;
+    $$->add_child($2);
+  }
 	;
 
 block_item
-	: declaration
-	| statement
+	: declaration { $$ = new block_item_n($1); }
+	| statement { $$ = new block_item_n($1); }
 	;
 
 expression_statement
@@ -609,20 +620,20 @@ expression_statement
 	| expression ';'
 	;
 
-selection_statement
-	: IF '(' expression ')' statement ELSE statement
-	| IF '(' expression ')' statement
-	| SWITCH '(' expression ')' statement
-	;
+//selection_statement
+//	: IF '(' expression ')' statement ELSE statement
+//	| IF '(' expression ')' statement
+//	| SWITCH '(' expression ')' statement
+//	;
 
-iteration_statement
-	: WHILE '(' expression ')' statement
-	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
-	;
+//iteration_statement
+//	: WHILE '(' expression ')' statement
+//	| DO statement WHILE '(' expression ')' ';'
+//	| FOR '(' expression_statement expression_statement ')' statement
+//	| FOR '(' expression_statement expression_statement expression ')' statement
+//	| FOR '(' declaration expression_statement ')' statement
+//	| FOR '(' declaration expression_statement expression ')' statement
+//	;
 
 jump_statement
 	: GOTO IDENTIFIER ';'
@@ -649,7 +660,7 @@ external_declaration
 function_definition
 //	: declaration_specifiers declarator declaration_list compound_statement
 	: declaration_specifiers declarator compound_statement {
-    $$ = new function_definition_n($1, $2);
+    $$ = new function_definition_n($1, $2, $3);
   }
 	;
 
