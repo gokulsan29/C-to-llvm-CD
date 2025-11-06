@@ -99,6 +99,13 @@ static const map<selection_statement_n::selection_sort_t, string> selection_sort
   {selection_statement_n::IF_THEN_ELSE, "if_then_else"},
 };
 
+static const map<iteration_statement_n::iteration_sort_t, string> iteration_sort_to_str_map = {
+  {iteration_statement_n::WHILE, "while"},
+  {iteration_statement_n::DO_WHILE, "do_while"},
+  {iteration_statement_n::FOR, "for"},
+  {iteration_statement_n::FOR_DECL, "for_decl"},
+};
+
 static const map<jump_statement_n::jump_sort_t, string> jump_sort_to_str_map = {
   {jump_statement_n::RETURN, "return"},
 };
@@ -301,7 +308,23 @@ selection_statement_n::to_string_ast(string prefix) const
 string
 iteration_statement_n::to_string_ast(string prefix) const
 {
-  string ret = "iteration_statement";
+  string ret = iteration_sort_to_str_map.at(this->get_iteration_sort());
+  if (this->get_iteration_sort() == iteration_statement_n::FOR) {
+    ret += "\n" + prefix + "|-" "initalizer";
+    ret += "\n" + prefix + "| " + this->get_init_expr()->to_string_ast(prefix + "| ");
+  }
+  else if (this->get_iteration_sort() == iteration_statement_n::FOR_DECL) {
+    ret += "\n" + prefix + "|-" "initalizer";
+    ret += "\n" + prefix + "| " + this->get_init_decl()->to_string_ast(prefix + "| ");
+  }
+  ret += "\n" + prefix + "|-" "cond";
+  ret += "\n" + prefix + "| " + this->get_cond()->to_string_ast(prefix + "| ");
+  if (this->iteration_statement_has_update_expr()) {
+    ret += "\n" + prefix + "|-" "update_expr";
+    ret += "\n" + prefix + "| " + this->get_update_expr()->to_string_ast(prefix + "| ");
+  }
+  ret += "\n" + prefix + "`-" "body";
+  ret += "\n" + prefix + "  " + this->get_body()->to_string_ast(prefix + "  ");
   return ret;
 }
 

@@ -393,8 +393,110 @@ private:
 class iteration_statement_n : public ast_n
 {
 public:
-  iteration_statement_n() { }
+  enum iteration_sort_t
+  {
+    WHILE,
+    DO_WHILE,
+    FOR,
+    FOR_DECL,
+  };
+
+  iteration_sort_t get_iteration_sort() const { return this->m_sort; }
+  expression_n const* get_cond() const { return this->m_cond; }
+  statement_n const* get_body() const { return this->m_body; }
+  expression_n const* get_init_expr() const
+  {
+    assert(this->get_iteration_sort() == FOR);
+    return this->m_init_expr;
+  }
+  declaration_n const* get_init_decl() const
+  {
+    assert(this->get_iteration_sort() == FOR_DECL);
+    return this->m_init_decl;
+  }
+  expression_n const* get_update_expr() const
+  {
+    assert(this->get_iteration_sort() == FOR || this->get_iteration_sort() == FOR_DECL);
+    return this->m_update;
+  }
+  bool iteration_statement_has_update_expr() const
+  {
+    return (this->get_iteration_sort() == FOR || this->get_iteration_sort() == FOR_DECL) &&
+           this->m_update != nullptr;
+  }
   string to_string_ast(string prefix="") const;
+
+  static iteration_statement_n* mk_while_iteration_statement(expression_n* cond, statement_n* body)
+  {
+    return new iteration_statement_n(WHILE, cond, body);
+  }
+  static iteration_statement_n* mk_do_while_iteration_statement(statement_n* body, expression_n* cond)
+  {
+    return new iteration_statement_n(DO_WHILE, cond, body);
+  }
+  static iteration_statement_n* mk_for_iteration_statement(expression_n* init_expr,
+                                                           expression_n* cond,
+                                                           statement_n* body)
+  {
+    return new iteration_statement_n(FOR, init_expr, cond, body);
+  }
+  static iteration_statement_n* mk_for_iteration_statement(expression_n* init_expr,
+                                                           expression_n* cond,
+                                                           expression_n* update,
+                                                           statement_n* body)
+  {
+    return new iteration_statement_n(FOR, init_expr, cond, update, body);
+  }
+  static iteration_statement_n* mk_for_iteration_statement(declaration_n* init_decl,
+                                                           expression_n* cond,
+                                                           statement_n* body)
+  {
+    return new iteration_statement_n(FOR_DECL, init_decl, cond, body);
+  }
+  static iteration_statement_n* mk_for_iteration_statement(declaration_n* init_decl,
+                                                           expression_n* cond,
+                                                           expression_n* update,
+                                                           statement_n* body)
+  {
+    return new iteration_statement_n(FOR_DECL, init_decl, cond, update, body);
+  }
+private:
+  iteration_statement_n(iteration_sort_t sort, expression_n* cond, statement_n* body) :
+    m_sort(sort), m_cond(cond), m_body(body)
+  { }
+  iteration_statement_n(iteration_sort_t sort,
+                        expression_n* init_expr,
+                        expression_n* cond,
+                        statement_n* body) :
+    m_sort(sort), m_init_expr(init_expr), m_cond(cond), m_body(body)
+  { }
+  iteration_statement_n(iteration_sort_t sort,
+                        expression_n* init_expr,
+                        expression_n* cond,
+                        expression_n* update,
+                        statement_n* body) :
+    m_sort(sort), m_init_expr(init_expr), m_cond(cond), m_update(update), m_body(body)
+  { }
+  iteration_statement_n(iteration_sort_t sort,
+                        declaration_n* init_decl,
+                        expression_n* cond,
+                        statement_n* body) :
+    m_sort(sort), m_init_decl(init_decl), m_cond(cond), m_body(body)
+  { }
+  iteration_statement_n(iteration_sort_t sort,
+                        declaration_n* init_decl,
+                        expression_n* cond,
+                        expression_n* update,
+                        statement_n* body) :
+    m_sort(sort), m_init_decl(init_decl), m_cond(cond), m_update(update), m_body(body)
+  { }
+
+  iteration_sort_t m_sort;
+  expression_n* m_init_expr;
+  declaration_n* m_init_decl;
+  expression_n* m_cond;
+  expression_n* m_update = nullptr;
+  statement_n* m_body;
 };
 
 class jump_statement_n : public ast_n

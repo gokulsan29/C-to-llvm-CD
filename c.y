@@ -711,12 +711,24 @@ selection_statement
 	;
 
 iteration_statement
-	: WHILE '(' expression ')' statement { $$ = new iteration_statement_n(); }
-//	| DO statement WHILE '(' expression ')' ';'
-//	| FOR '(' expression_statement expression_statement ')' statement
-//	| FOR '(' expression_statement expression_statement expression ')' statement
-//	| FOR '(' declaration expression_statement ')' statement
-//	| FOR '(' declaration expression_statement expression ')' statement
+	: WHILE '(' expression ')' statement {
+	  $$ = iteration_statement_n::mk_while_iteration_statement($3, $5);
+	}
+	| DO statement WHILE '(' expression ')' ';' {
+	  $$ = iteration_statement_n::mk_do_while_iteration_statement($2, $5);
+	}
+	| FOR '(' expression_statement expression_statement ')' statement {
+	  $$ = iteration_statement_n::mk_for_iteration_statement($3, $4, $6);
+	}
+	| FOR '(' expression_statement expression_statement expression ')' statement {
+	  $$ = iteration_statement_n::mk_for_iteration_statement($3, $4, $5, $7);
+	}
+  | FOR '(' declaration expression_statement ')' statement {
+    $$ = iteration_statement_n::mk_for_iteration_statement($3, $4, $6);
+  }
+	| FOR '(' declaration expression_statement expression ')' statement {
+	  $$ = iteration_statement_n::mk_for_iteration_statement($3, $4, $5, $7);
+	}
 	;
 
 jump_statement
