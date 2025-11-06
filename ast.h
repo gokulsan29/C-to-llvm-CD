@@ -362,8 +362,32 @@ private:
 class selection_statement_n : public ast_n
 {
 public:
-  selection_statement_n() { }
+  enum selection_sort_t
+  {
+    IF_THEN,
+    IF_THEN_ELSE,
+  };
+  selection_statement_n(selection_sort_t sort, expression_n* cond, statement_n* body) :
+    m_sort(sort), m_cond(cond), m_body(body)
+  { }
+  selection_statement_n(expression_n* cond, statement_n* body, statement_n* else_body) :
+    m_sort(IF_THEN_ELSE), m_cond(cond), m_body(body), m_else_body(else_body)
+  { }
+
+  selection_sort_t get_selection_sort() const { return this->m_sort; }
+  expression_n const* get_cond() const { return this->m_cond; }
+  statement_n const* get_body() const { return this->m_body; }
+  statement_n const* get_else_body() const
+  {
+    assert(this->get_selection_sort() == IF_THEN_ELSE);
+    return this->m_else_body;
+  }
   string to_string_ast(string prefix="") const;
+private:
+  selection_sort_t m_sort;
+  expression_n* m_cond;
+  statement_n* m_body;
+  statement_n* m_else_body = nullptr;
 };
 
 class iteration_statement_n : public ast_n
@@ -380,12 +404,12 @@ public:
   {
     RETURN,
   };
-  jump_statement_n(jump_sort_t jump_sort) : m_jump_sort(jump_sort) { }
-  jump_statement_n(jump_sort_t jump_sort, expression_n* expr) :
-    m_jump_sort(jump_sort), m_expr(expr)
+  jump_statement_n(jump_sort_t sort) : m_sort(sort) { }
+  jump_statement_n(jump_sort_t sort, expression_n* expr) :
+    m_sort(sort), m_expr(expr)
   { }
 
-  jump_sort_t get_jump_sort() const { return this->m_jump_sort; }
+  jump_sort_t get_jump_sort() const { return this->m_sort; }
   expression_n const* get_expr_for_return() const
   {
     assert(this->get_jump_sort() == RETURN);
@@ -393,8 +417,8 @@ public:
   }
   string to_string_ast(string prefix="") const;
 private:
-  jump_sort_t m_jump_sort;
-  expression_n* m_expr;
+  jump_sort_t m_sort;
+  expression_n* m_expr = nullptr;
 };
 
 class statement_n : public ast_n

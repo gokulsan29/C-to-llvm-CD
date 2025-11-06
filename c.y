@@ -701,8 +701,12 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement ELSE statement { $$ = new selection_statement_n(); }
-	| IF '(' expression ')' statement { $$ = new selection_statement_n(); }
+	: IF '(' expression ')' statement ELSE statement {
+	  $$ = new selection_statement_n($3, $5, $7);
+	}
+	| IF '(' expression ')' statement {
+	  $$ = new selection_statement_n(selection_statement_n::IF_THEN, $3, $5);
+	}
 //	| SWITCH '(' expression ')' statement
 	;
 

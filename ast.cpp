@@ -94,6 +94,11 @@ static const map<expression_n::operation_kind_t, string> op_kind_to_str_map = {
   {expression_n::OP_BIT_OR_ASSIGN, "bit_or="},
 };
 
+static const map<selection_statement_n::selection_sort_t, string> selection_sort_to_str_map = {
+  {selection_statement_n::IF_THEN, "if_then"},
+  {selection_statement_n::IF_THEN_ELSE, "if_then_else"},
+};
+
 static const map<jump_statement_n::jump_sort_t, string> jump_sort_to_str_map = {
   {jump_statement_n::RETURN, "return"},
 };
@@ -278,7 +283,18 @@ expression_n::to_string_ast(string prefix) const
 string
 selection_statement_n::to_string_ast(string prefix) const
 {
-  string ret = "selection_statement";
+  string ret = selection_sort_to_str_map.at(this->get_selection_sort());
+  ret += "\n" + prefix + "|-" "cond";
+  ret += "\n" + prefix + "| " + this->get_cond()->to_string_ast(prefix + "| ");
+  bool has_else_clause = this->get_selection_sort() == selection_statement_n::IF_THEN_ELSE;
+  string body_prefix = has_else_clause ? "|-" : "`-";
+  string sub_body_prefix = has_else_clause ? "| " : "  ";
+  ret += "\n" + prefix + body_prefix + "body";
+  ret += "\n" + prefix + sub_body_prefix + this->get_body()->to_string_ast(prefix + sub_body_prefix);
+  if (has_else_clause) {
+    ret += "\n" + prefix + "`-" "else_body";
+    ret += "\n" + prefix + "  " + this->get_else_body()->to_string_ast(prefix + "  ");
+  }
   return ret;
 }
 
