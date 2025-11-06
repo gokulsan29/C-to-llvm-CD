@@ -223,8 +223,12 @@ additive_expression
 
 shift_expression
 	: additive_expression { $$ = $1; }
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
+	| shift_expression LEFT_OP additive_expression {
+	  $$ = new expression_n(expression_n::OP_LSHIFT, $1, $3);
+	}
+	| shift_expression RIGHT_OP additive_expression {
+	  $$ = new expression_n(expression_n::OP_RSHIFT, $1, $3);
+	}
 	;
 
 relational_expression
@@ -284,7 +288,7 @@ logical_and_expression
 logical_or_expression
 	: logical_and_expression { $$ = $1; }
 	| logical_or_expression OR_OP logical_and_expression {
-	  $$ = new expression_n(expression_n::OP_LOGIC_AND, $1, $3);
+	  $$ = new expression_n(expression_n::OP_LOGIC_OR, $1, $3);
 	}
 	;
 

@@ -75,13 +75,13 @@ static const map<expression_n::operation_kind_t, string> op_kind_to_str_map = {
   {expression_n::OP_GTE, "gte"},
   {expression_n::OP_EQ, "eq"},
   {expression_n::OP_NEQ, "neq"},
-  {expression_n::OP_BIT_AND, "&"},
-  {expression_n::OP_BIT_OR, "|"},
+  {expression_n::OP_BIT_AND, "bit_and"},
+  {expression_n::OP_BIT_OR, "bit_or"},
   {expression_n::OP_XOR, "xor"},
   {expression_n::OP_LOGIC_AND, "and"},
   {expression_n::OP_LOGIC_OR, "or"},
   {expression_n::OP_CONDITIONAL, "cond"},
-  {expression_n::OP_ASSIGN, "="},
+  {expression_n::OP_ASSIGN, "assign"},
   {expression_n::OP_MUL_ASSIGN, "*="},
   {expression_n::OP_DIV_ASSIGN, "/="},
   {expression_n::OP_MOD_ASSIGN, "%="},
@@ -89,9 +89,9 @@ static const map<expression_n::operation_kind_t, string> op_kind_to_str_map = {
   {expression_n::OP_SUB_ASSIGN, "-="},
   {expression_n::OP_LSHIFT_ASSIGN, "<<="},
   {expression_n::OP_RSHIFT_ASSIGN, ">>="},
-  {expression_n::OP_BIT_AND_ASSIGN, "&="},
+  {expression_n::OP_BIT_AND_ASSIGN, "bit_and="},
   {expression_n::OP_XOR_ASSIGN, "^="},
-  {expression_n::OP_BIT_OR_ASSIGN, "|="},
+  {expression_n::OP_BIT_OR_ASSIGN, "bit_or="},
 };
 
 static const map<jump_statement_n::jump_sort_t, string> jump_sort_to_str_map = {
