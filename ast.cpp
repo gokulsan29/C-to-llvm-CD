@@ -43,6 +43,61 @@ static const map<specifier, string> specifier_to_str_map = {
   {specifier::ALIGNAS, "alignas"},
 };
 
+static const map<constant_n::constant_sort_t, string> constant_sort_to_str_map = {
+  {constant_n::STRING_LITERAL, "string_literal"},
+  {constant_n::INTEGER_CONST, "integer_constant"},
+  {constant_n::FLOAT_CONST, "float_constant"},
+};
+
+static const map<expression_n::operation_kind_t, string> op_kind_to_str_map = {
+  {expression_n::OP_EMPTY, "no-op"},
+  {expression_n::OP_COMMA, "comma"},
+  {expression_n::OP_FUNC_CALL, "function_call"},
+  {expression_n::OP_FUNC_ARGS, "args"},
+  {expression_n::OP_POST_INC, "post_inc"},
+  {expression_n::OP_POST_DEC, "post_dec"},
+  {expression_n::OP_PRE_INC, "pre_inc"},
+  {expression_n::OP_PRE_DEC, "pre_dec"},
+  {expression_n::OP_POS, "pos"},
+  {expression_n::OP_NEG, "neg"},
+  {expression_n::OP_COMPLEMENT, "~"},
+  {expression_n::OP_LOGIC_NOT, "not"},
+  {expression_n::OP_MUL, "mul"},
+  {expression_n::OP_DIV, "div"},
+  {expression_n::OP_MOD, "mod"},
+  {expression_n::OP_ADD, "add"},
+  {expression_n::OP_SUB, "sub"},
+  {expression_n::OP_LSHIFT, "<<"},
+  {expression_n::OP_RSHIFT, ">>"},
+  {expression_n::OP_LT, "lt"},
+  {expression_n::OP_GT, "gt"},
+  {expression_n::OP_LTE, "lte"},
+  {expression_n::OP_GTE, "gte"},
+  {expression_n::OP_EQ, "eq"},
+  {expression_n::OP_NEQ, "neq"},
+  {expression_n::OP_BIT_AND, "&"},
+  {expression_n::OP_BIT_OR, "|"},
+  {expression_n::OP_XOR, "xor"},
+  {expression_n::OP_LOGIC_AND, "and"},
+  {expression_n::OP_LOGIC_OR, "or"},
+  {expression_n::OP_CONDITIONAL, "cond"},
+  {expression_n::OP_ASSIGN, "="},
+  {expression_n::OP_MUL_ASSIGN, "*="},
+  {expression_n::OP_DIV_ASSIGN, "/="},
+  {expression_n::OP_MOD_ASSIGN, "%="},
+  {expression_n::OP_ADD_ASSIGN, "+="},
+  {expression_n::OP_SUB_ASSIGN, "-="},
+  {expression_n::OP_LSHIFT_ASSIGN, "<<="},
+  {expression_n::OP_RSHIFT_ASSIGN, ">>="},
+  {expression_n::OP_BIT_AND_ASSIGN, "&="},
+  {expression_n::OP_XOR_ASSIGN, "^="},
+  {expression_n::OP_BIT_OR_ASSIGN, "|="},
+};
+
+static const map<jump_statement_n::jump_sort_t, string> jump_sort_to_str_map = {
+  {jump_statement_n::RETURN, "return"},
+};
+
 template <typename T_NODE>
 string
 list_n<T_NODE>::to_string_ast(string prefix) const
@@ -61,6 +116,12 @@ string
 identifier_n::to_string_ast(string prefix) const
 {
   return "identifier: " + this->get_str();
+}
+
+string
+constant_n::to_string_ast(string prefix) const
+{
+  return "constant " + constant_sort_to_str_map.at(this->get_sort()) + ": " + this->get_str();
 }
 
 string
@@ -119,7 +180,7 @@ direct_declarator_item_n::to_string_ast(string prefix) const
       identifier_n* identifier = dynamic_cast<identifier_n*>(this->m_item);
       return identifier->to_string_ast(prefix);
     }
-    case direct_declarator_item_n::PARMETER_LIST: {
+    case direct_declarator_item_n::PARAMETER_LIST: {
       parameter_list_n* parameter_list = dynamic_cast<parameter_list_n*>(this->m_item);
       return parameter_list->to_string_ast(prefix);
     }
@@ -127,7 +188,6 @@ direct_declarator_item_n::to_string_ast(string prefix) const
       NOT_REACHED();
     }
   }
-  return "";
 }
 
 string
@@ -197,10 +257,82 @@ init_declarator_list_n::to_string_ast(string prefix) const
 }
 
 string
+expression_n::to_string_ast(string prefix) const
+{
+  switch (this->get_kind()) {
+    case expression_n::OP_VAR: {
+      return this->get_identifier()->to_string_ast(prefix);
+    }
+    case expression_n::OP_CONST: {
+      return this->get_constant()->to_string_ast(prefix);
+    }
+    default: break; // Non var and non const cases are handled below
+  }
+  string ret = op_kind_to_str_map.at(this->m_op_kind);
+  if (this->get_size() != 0) {
+    ret += this->list_n<expression_n>::to_string_ast(prefix);
+  }
+  return ret;
+}
+
+string
+selection_statement_n::to_string_ast(string prefix) const
+{
+  string ret = "selection_statement";
+  return ret;
+}
+
+string
+iteration_statement_n::to_string_ast(string prefix) const
+{
+  string ret = "iteration_statement";
+  return ret;
+}
+
+string
+jump_statement_n::to_string_ast(string prefix) const
+{
+  string ret = jump_sort_to_str_map.at(this->get_jump_sort());
+  if (this->get_jump_sort() == jump_statement_n::RETURN &&
+      this->get_expr_for_return() != nullptr) {
+    ret += "\n" + prefix + "`-" +
+            this->get_expr_for_return()->to_string_ast(prefix + "  ");
+  }
+  return ret;
+}
+
+string
 statement_n::to_string_ast(string prefix) const
 {
-  string ret = "statement";
-  return ret;
+  switch (this->m_statement_type) {
+    case statement_n::COMPOUND_STATEMENT: {
+      compound_statement_n* compound_statement =
+        dynamic_cast<compound_statement_n*>(this->m_generic_statement);
+      return compound_statement->to_string_ast(prefix);
+    }
+    case statement_n::EXPRESSION: {
+      expression_n* expression = dynamic_cast<expression_n*>(this->m_generic_statement);
+      return expression->to_string_ast(prefix);
+    }
+    case statement_n::SELECTION_STATEMENT: {
+      selection_statement_n* selection_statement =
+        dynamic_cast<selection_statement_n*>(this->m_generic_statement);
+      return selection_statement->to_string_ast(prefix);
+    }
+    case statement_n::ITERATION_STATEMENT: {
+      iteration_statement_n* iteration_statement =
+        dynamic_cast<iteration_statement_n*>(this->m_generic_statement);
+      return iteration_statement->to_string_ast(prefix);
+    }
+    case statement_n::JUMP_STATEMENT: {
+      jump_statement_n* jump_statement =
+        dynamic_cast<jump_statement_n*>(this->m_generic_statement);
+      return jump_statement->to_string_ast(prefix);
+    }
+    default: {
+      NOT_REACHED();
+    }
+  }
 }
 
 string

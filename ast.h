@@ -91,6 +91,22 @@ public:
   string const& get_identifier_name() const { return this->get_str(); }
 };
 
+class constant_n : public string_n // Node for compile time constants, including enums
+{
+public:
+  enum constant_sort_t
+  {
+    STRING_LITERAL,
+    INTEGER_CONST,
+    FLOAT_CONST
+  };
+  constant_n(constant_sort_t constant_sort, char* s) : string_n(s), m_sort(constant_sort) { }
+  constant_sort_t get_sort() const { return this->m_sort; }
+  string to_string_ast(string prefix="") const;
+private:
+  constant_sort_t m_sort;
+};
+
 class declarator_n;
 class parameter_declaration_n : public ast_n
 {
@@ -130,13 +146,13 @@ public:
   enum item_opt_t
   {
     IDENTIFIER,
-    PARMETER_LIST
+    PARAMETER_LIST
   };
   direct_declarator_item_n(identifier_n* identifier) :
     m_item_opt(IDENTIFIER), m_item(identifier)
   { }
   direct_declarator_item_n(parameter_list_n* parameter_list) :
-    m_item_opt(PARMETER_LIST), m_item(parameter_list)
+    m_item_opt(PARAMETER_LIST), m_item(parameter_list)
   { }
   string to_string_ast(string prefix="") const;
 private:
@@ -208,13 +224,6 @@ public:
   string to_string_ast(string prefix="") const;
 };
 
-class statement_n : public ast_n
-{
-public:
-  statement_n() { }
-  string to_string_ast(string prefix="") const;
-};
-
 class declaration_n : public ast_n
 {
 public:
@@ -233,6 +242,7 @@ private:
   init_declarator_list_n* m_init_declarator_list;
 };
 
+class statement_n;
 class block_item_n : public ast_n
 {
 public:
@@ -250,6 +260,178 @@ public:
   compound_statement_n() : list_n<block_item_n>() { }
   compound_statement_n(vector<block_item_n*> l) : list_n<block_item_n>(l) { }
   string to_string_ast(string prefix="") const;
+};
+
+class expression_n : public list_n<expression_n>
+{
+public:
+  enum operation_kind_t
+  {
+    OP_EMPTY,
+    OP_COMMA, // expr a and b are executed independently
+    OP_VAR, // may be a var or function name
+    OP_CONST,
+    OP_FUNC_CALL,
+    OP_FUNC_ARGS,
+    OP_POST_INC,
+    OP_POST_DEC,
+    OP_PRE_INC,
+    OP_PRE_DEC,
+    OP_POS,
+    OP_NEG,
+    OP_COMPLEMENT,
+    OP_LOGIC_NOT,
+    OP_MUL,
+    OP_DIV,
+    OP_MOD,
+    OP_ADD,
+    OP_SUB,
+    OP_LSHIFT,
+    OP_RSHIFT,
+    OP_LT,
+    OP_GT,
+    OP_LTE,
+    OP_GTE,
+    OP_EQ,
+    OP_NEQ,
+    OP_BIT_AND,
+    OP_BIT_OR,
+    OP_XOR,
+    OP_LOGIC_AND,
+    OP_LOGIC_OR,
+    OP_CONDITIONAL,
+    OP_ASSIGN,
+    OP_MUL_ASSIGN,
+    OP_DIV_ASSIGN,
+    OP_MOD_ASSIGN,
+    OP_ADD_ASSIGN,
+    OP_SUB_ASSIGN,
+    OP_LSHIFT_ASSIGN,
+    OP_RSHIFT_ASSIGN,
+    OP_BIT_AND_ASSIGN,
+    OP_XOR_ASSIGN,
+    OP_BIT_OR_ASSIGN,
+  };
+  expression_n() : list_n<expression_n>(), m_op_kind(OP_EMPTY) { }
+  expression_n(identifier_n* identifier) : m_op_kind(OP_VAR), m_identifier(identifier) { }
+  expression_n(constant_n* constant) : m_op_kind(OP_CONST), m_constant(constant) { }
+  expression_n(operation_kind_t op, expression_n* e) :
+    m_op_kind(op)
+  {
+    this->add_child(e);
+  }
+  expression_n(operation_kind_t op, expression_n* e1,  expression_n* e2) :
+    m_op_kind(op)
+  {
+    this->add_child(e1);
+    this->add_child(e2);
+  }
+  expression_n(operation_kind_t op, expression_n* e1,  expression_n* e2, expression_n* e3) :
+    m_op_kind(op)
+  {
+    this->add_child(e1);
+    this->add_child(e2);
+    this->add_child(e3);
+  }
+  operation_kind_t get_kind() const { return this->m_op_kind; }
+  bool is_var() const { return this->get_kind() == OP_VAR; }
+  bool is_const() const { return this->get_kind() == OP_CONST; }
+  identifier_n const* get_identifier() const { assert(this->is_var()); return this->m_identifier; }
+  constant_n const* get_constant() const { assert(this->is_const()); return this->m_constant; }
+  string to_string_ast(string prefix="") const;
+
+  static expression_n* mk_func_args()
+  {
+    return new expression_n(OP_FUNC_ARGS);
+  }
+
+  static expression_n* mk_func_args(vector<expression_n*> args)
+  {
+    return new expression_n(OP_FUNC_ARGS, args);
+  }
+private:
+  expression_n(operation_kind_t op_kind) : m_op_kind(op_kind) { }
+  expression_n(operation_kind_t op_kind, vector<expression_n*> expr_vec) :
+    m_op_kind(op_kind), list_n<expression_n>(expr_vec)
+  { }
+  operation_kind_t m_op_kind;
+  identifier_n* m_identifier;
+  constant_n* m_constant;
+};
+
+class selection_statement_n : public ast_n
+{
+public:
+  selection_statement_n() { }
+  string to_string_ast(string prefix="") const;
+};
+
+class iteration_statement_n : public ast_n
+{
+public:
+  iteration_statement_n() { }
+  string to_string_ast(string prefix="") const;
+};
+
+class jump_statement_n : public ast_n
+{
+public:
+  enum jump_sort_t
+  {
+    RETURN,
+  };
+  jump_statement_n(jump_sort_t jump_sort) : m_jump_sort(jump_sort) { }
+  jump_statement_n(jump_sort_t jump_sort, expression_n* expr) :
+    m_jump_sort(jump_sort), m_expr(expr)
+  { }
+
+  jump_sort_t get_jump_sort() const { return this->m_jump_sort; }
+  expression_n const* get_expr_for_return() const
+  {
+    assert(this->get_jump_sort() == RETURN);
+    return this->m_expr;
+  }
+  string to_string_ast(string prefix="") const;
+private:
+  jump_sort_t m_jump_sort;
+  expression_n* m_expr;
+};
+
+class statement_n : public ast_n
+{
+public:
+  enum statement_type_t
+  {
+    COMPOUND_STATEMENT,
+    EXPRESSION,
+    SELECTION_STATEMENT,
+    ITERATION_STATEMENT,
+    JUMP_STATEMENT
+  };
+  statement_n(compound_statement_n* compound_statement) :
+    m_statement_type(COMPOUND_STATEMENT),
+    m_generic_statement(compound_statement)
+  { }
+  statement_n(expression_n* expression) :
+    m_statement_type(EXPRESSION),
+    m_generic_statement(expression)
+  { }
+  statement_n(selection_statement_n* selection_statement) :
+    m_statement_type(SELECTION_STATEMENT),
+    m_generic_statement(selection_statement)
+  { }
+  statement_n(iteration_statement_n* iteration_statement) :
+    m_statement_type(ITERATION_STATEMENT),
+    m_generic_statement(iteration_statement)
+  { }
+  statement_n(jump_statement_n* jump_statement) :
+    m_statement_type(JUMP_STATEMENT),
+    m_generic_statement(jump_statement)
+  { }
+  string to_string_ast(string prefix="") const;
+private:
+  statement_type_t m_statement_type;
+  ast_n* m_generic_statement;
 };
 
 class function_definition_n : public ast_n
