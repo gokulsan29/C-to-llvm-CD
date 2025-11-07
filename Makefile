@@ -1,7 +1,20 @@
 TESTS_DIR := examples
 TESTS_FILES := $(wildcard $(TESTS_DIR)/*.c)
 
-CPP := g++
+# CPP := g++
+CPP := clang++
+
+OLD_CFLAGS := \
+							-lm \
+							-ll \
+							-lfl
+
+CFLAGS := \
+					-O2 \
+					-lm \
+					-ll \
+					-lfl \
+					`llvm-config --cxxflags --ldflags --system-libs --libs core`
 
 COMMON_DEPS := ast.h \
 							common.h
@@ -29,7 +42,7 @@ OUTPUT := cc
 .PHONY: clean test
 
 $(OUTPUT): $(CC_DEPS)
-	$(CPP) $(CC_LIBS) -O2 -lm -ll -lfl -o $@
+	$(CPP) $(CC_LIBS) $(CFLAGS) -o $@
 
 c.tab.cpp c.tab.hpp: $(BISON_DEPS)
 	bison -o c.tab.cpp -d c.y
