@@ -38,7 +38,7 @@ c.lex.cpp: $(FLEX_DEPS)
 	flex -o c.lex.cpp -l c.l
 
 test: $(OUTPUT)
-	@$(foreach TEST,$(TESTS_FILES), ./$(OUTPUT) $(TEST);)
+	@$(foreach TEST,$(TESTS_FILES), ./$(OUTPUT) $(TEST) --show-ast;)
 
 clean::
 	rm -f c.tab.cpp c.tab.hpp c.lex.cpp cc c.output

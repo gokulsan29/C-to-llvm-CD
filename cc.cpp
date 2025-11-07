@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include <iostream>
@@ -19,7 +20,7 @@ static void usage()
 int
 main(int argc, char **argv)
 {
-  if (argc != 2) {
+  if (argc < 2) {
     usage();
     exit(1);
   }
@@ -27,10 +28,22 @@ main(int argc, char **argv)
   yyin = fopen(filename, "r");
   assert(yyin);
 
+  bool show_ast = false;
+  for (int i = 2;i < argc;i++) {
+    if (strcmp(argv[i], "--show-ast") == 0) {
+      show_ast = true;
+    }
+    else {
+      std::cout << "Invalid arg: " << argv[i] << std::endl;
+      exit(1);
+    }
+  }
+
   translation_unit_n *root = nullptr;
   int ret = yyparse(&root);
-  std::cout << filename << "\n";
-  std::cout << root->to_string_ast() << "\n\n";
+  if (show_ast) {
+    std::cout << root->to_string_ast() << "\n\n";
+  }
   printf("retv = %d\n", ret);
   exit(0);
 }
