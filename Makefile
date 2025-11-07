@@ -17,21 +17,18 @@ CFLAGS := \
 					`llvm-config --cxxflags --ldflags --system-libs --libs core`
 
 COMMON_DEPS := ast.h \
-							common.h
+							 common.h
 
-CC_DEPS := cc.cpp \
-          c.tab.cpp \
-          c.lex.cpp \
-          ast.cpp \
-          $(COMMON_DEPS)
+CC_LIBS := ast_printer.cpp \
+					 c.tab.cpp \
+					 c.lex.cpp \
+					 cc.cpp
 
-CC_LIBS := ast.cpp \
-          c.tab.cpp \
-          c.lex.cpp \
-          cc.cpp
+CC_DEPS := $(CC_LIBS) \
+					 $(COMMON_DEPS)
 
 BISON_DEPS := c.y \
-             $(COMMON_DEPS)
+							$(COMMON_DEPS)
 
 FLEX_DEPS = c.l \
             c.tab.cpp \
