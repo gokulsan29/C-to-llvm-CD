@@ -20,6 +20,7 @@ COMMON_DEPS := ast.h \
 							 common.h
 
 CC_LIBS := ast_printer.cpp \
+					 llvm_codegen.cpp \
 					 c.tab.cpp \
 					 c.lex.cpp \
 					 cc.cpp

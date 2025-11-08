@@ -588,6 +588,7 @@ public:
     m_function_definition(nullptr),
     m_declaration(declaration)
   { }
+
   string to_string_ast(string prefix="") const;
 private:
   function_definition_n* m_function_definition;
@@ -597,10 +598,37 @@ private:
 class translation_unit_n : public list_n<external_declaration_n>
 {
 public:
-  translation_unit_n() : list_n<external_declaration_n>() { }
-  translation_unit_n(vector<external_declaration_n*> l) :
-    list_n<external_declaration_n>(l)
+  translation_unit_n(string filename) :
+    list_n<external_declaration_n>(),
+    m_filename(filename),
+    m_output_filename(this->generate_output_filename())
   { }
+  translation_unit_n(string filename, string output_filename) :
+    list_n<external_declaration_n>(),
+    m_filename(filename),
+    m_output_filename(output_filename)
+  { }
+  translation_unit_n(vector<external_declaration_n*> l, string filename) :
+    list_n<external_declaration_n>(l),
+    m_filename(filename),
+    m_output_filename(this->generate_output_filename())
+  { }
+  translation_unit_n(vector<external_declaration_n*> l, string filename, string output_filename) :
+    list_n<external_declaration_n>(l),
+    m_filename(filename),
+    m_output_filename(output_filename)
+  { }
+
+  void llvm_codegen() const;
   string to_string_ast(string prefix="") const;
+  string const get_filename() const { return this->m_filename; }
+  string const get_output_filename() const { return this->m_output_filename; }
+  string generate_output_filename() const
+  {
+    return this->m_filename + ".ll";
+  }
+private:
+  string m_filename;
+  string m_output_filename;
 };
 

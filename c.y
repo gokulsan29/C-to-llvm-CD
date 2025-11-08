@@ -743,7 +743,7 @@ jump_statement
 
 translation_unit
 	: external_declaration {
-	  *root = new translation_unit_n();
+	  assert(*root != nullptr);
 	  $$ = *root;
 	  $$->add_child($1);
 	}

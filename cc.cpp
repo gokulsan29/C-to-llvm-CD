@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-#include <iostream>
 
 #include "ast.h"
 #include "c.tab.hpp"
@@ -39,11 +36,12 @@ main(int argc, char **argv)
     }
   }
 
-  translation_unit_n *root = nullptr;
+  translation_unit_n *root = new translation_unit_n(filename);
   int ret = yyparse(&root);
   if (show_ast) {
     std::cout << root->to_string_ast() << "\n\n";
   }
   printf("retv = %d\n", ret);
+  root->llvm_codegen();
   exit(0);
 }

@@ -4,4 +4,5 @@ c.tab.cpp
 compile_commands.json
 .cache/
 cc
+*.ll
 
