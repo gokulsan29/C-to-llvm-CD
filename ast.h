@@ -625,7 +625,7 @@ public:
   string const get_output_filename() const { return this->m_output_filename; }
   string generate_output_filename() const
   {
-    return this->m_filename + ".ll";
+    return this->m_filename.substr(0, this->m_filename.size() - 2) + ".ll";
   }
 private:
   string m_filename;

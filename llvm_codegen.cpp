@@ -20,9 +20,8 @@ translation_unit_n::llvm_codegen() const
   g_module = make_unique<llvm::Module>(this->get_filename(), *g_ctx);
   g_builder = make_unique<llvm::IRBuilder<>>(*g_ctx);
 
-  string output_filename = this->get_filename() + ".ll";
   error_code EC;
-  llvm::raw_fd_ostream fout(output_filename, EC, llvm::sys::fs::OF_None);
+  llvm::raw_fd_ostream fout(this->get_output_filename(), EC, llvm::sys::fs::OF_None);
   if (EC) {
     cout << "Error:\n" << EC.message() << "\n";
   }
