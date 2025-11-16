@@ -4,10 +4,7 @@
 
 #include "ast.h"
 #include "c.tab.hpp"
-
-extern "C" int yylex();
-int yyparse(translation_unit_n **root);
-extern "C" FILE *yyin;
+#include "lex.h"
 
 static void usage()
 {

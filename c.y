@@ -5,15 +5,8 @@
 
 #include "ast.h"
 #include "common.h"
-
-using namespace std;
-
-// stuff from flex that bison needs to know about:
-extern "C" int yylex();
-int yyparse(translation_unit_n **root);
-extern "C" FILE *yyin;
- 
-void yyerror(translation_unit_n **root, const char *s);
+#include "lex.h"
+#include "parse.h"
 %}
 
 %code requires {

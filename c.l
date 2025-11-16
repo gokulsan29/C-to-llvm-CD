@@ -25,8 +25,7 @@ WS  [ \t\v\n\f]
 #include <stdio.h>
 #include "ast.h"
 #include "c.tab.hpp"
-
-extern void yyerror(translation_unit_n **root, const char *);  /* prints grammar violation message */
+#include "parse.h"
 
 extern int sym_type(const char *);  /* returns type from symbol table */
 

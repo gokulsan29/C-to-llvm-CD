@@ -17,7 +17,9 @@ CFLAGS := \
 					`llvm-config --cxxflags --ldflags --system-libs --libs core`
 
 COMMON_DEPS := ast.h \
-							 common.h
+							 common.h \
+							 lex.h \
+							 parse.h
 
 CC_LIBS := ast_printer.cpp \
 					 llvm_codegen.cpp \
