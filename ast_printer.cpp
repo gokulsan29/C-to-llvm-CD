@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -7,40 +8,40 @@
 
 using namespace std;
 
-static const map<specifier, string> specifier_to_str_map = {
+static const map<specifier_t, string> specifier_to_str_map = {
   // storage class specifiers
-  {specifier::TYPEDEF, "typedef"},
-  {specifier::EXTERN, "extern"},
-  {specifier::STATIC, "static"},
-  {specifier::THREAD_LOCAL, "thread_local"},
-  {specifier::AUTO, "auto"},
-  {specifier::REGISTER, "register"},
+  {specifier_t::TYPEDEF, "typedef"},
+  {specifier_t::EXTERN, "extern"},
+  {specifier_t::STATIC, "static"},
+  {specifier_t::THREAD_LOCAL, "thread_local"},
+  {specifier_t::AUTO, "auto"},
+  {specifier_t::REGISTER, "register"},
   // type specifiers
-  {specifier::VOID, "void"},
-  {specifier::CHAR, "char"},
-  {specifier::SHORT, "short"},
-  {specifier::INT, "int"},
-  {specifier::LONG, "long"},
-  {specifier::FLOAT, "float"},
-  {specifier::DOUBLE, "double"},
-  {specifier::SIGNED, "signed"},
-  {specifier::UNSIGNED, "unsigned"},
-  {specifier::BOOL, "bool"},
-  {specifier::COMPLEX, "complex"},
-  {specifier::IMAGINARY, "imaginary"},
-  {specifier::STRUCT, "struct"},
-  {specifier::UNION, "union"},
-  {specifier::ENUM, "enum"},
+  {specifier_t::VOID, "void"},
+  {specifier_t::CHAR, "char"},
+  {specifier_t::SHORT, "short"},
+  {specifier_t::INT, "int"},
+  {specifier_t::LONG, "long"},
+  {specifier_t::FLOAT, "float"},
+  {specifier_t::DOUBLE, "double"},
+  {specifier_t::SIGNED, "signed"},
+  {specifier_t::UNSIGNED, "unsigned"},
+  {specifier_t::BOOL, "bool"},
+  {specifier_t::COMPLEX, "complex"},
+  {specifier_t::IMAGINARY, "imaginary"},
+  {specifier_t::STRUCT, "struct"},
+  {specifier_t::UNION, "union"},
+  {specifier_t::ENUM, "enum"},
   // type qualfiers
-  {specifier::CONST, "const"},
-  {specifier::RESTRICT, "restrict"},
-  {specifier::VOLATILE, "volatile"},
-  {specifier::ATOMIC, "atomic"},
+  {specifier_t::CONST, "const"},
+  {specifier_t::RESTRICT, "restrict"},
+  {specifier_t::VOLATILE, "volatile"},
+  {specifier_t::ATOMIC, "atomic"},
   // function specifiers
-  {specifier::INLINE, "inline"},
-  {specifier::NORETURN, "noreturn"},
+  {specifier_t::INLINE, "inline"},
+  {specifier_t::NORETURN, "noreturn"},
   // alignment specifier
-  {specifier::ALIGNAS, "alignas"},
+  {specifier_t::ALIGNAS, "alignas"},
 };
 
 static const map<constant_n::constant_sort_t, string> constant_sort_to_str_map = {
@@ -139,15 +140,15 @@ constant_n::to_string_ast(string prefix) const
 string
 declaration_specifier_n::to_string_ast(string prefix) const
 {
-  specifier decl_spec = this->get_declaration_specifier();
-  if (decl_spec == specifier::STORAGE_CLASS_SPECIFIER_START ||
-      decl_spec == specifier::STORAGE_CLASS_SPECIFIER_END ||
-      decl_spec == specifier::TYPE_SPECIFIER_START ||
-      decl_spec == specifier::TYPE_SPECIFIER_END ||
-      decl_spec == specifier::TYPE_QUALIFIER_START ||
-      decl_spec == specifier::TYPE_QUALIFIER_END ||
-      decl_spec == specifier::FUNCTION_SPECIFIER_START ||
-      decl_spec == specifier::FUNCTION_SPECIFIER_END) {
+  specifier_t decl_spec = this->get_declaration_specifier();
+  if (decl_spec == specifier_t::STORAGE_CLASS_SPECIFIER_START ||
+      decl_spec == specifier_t::STORAGE_CLASS_SPECIFIER_END ||
+      decl_spec == specifier_t::TYPE_SPECIFIER_START ||
+      decl_spec == specifier_t::TYPE_SPECIFIER_END ||
+      decl_spec == specifier_t::TYPE_QUALIFIER_START ||
+      decl_spec == specifier_t::TYPE_QUALIFIER_END ||
+      decl_spec == specifier_t::FUNCTION_SPECIFIER_START ||
+      decl_spec == specifier_t::FUNCTION_SPECIFIER_END) {
     NOT_REACHED();
   }
   return specifier_to_str_map.at(decl_spec);

@@ -79,7 +79,7 @@
 %type  <declarator> declarator
 %type  <init_decl> init_declarator
 %type  <init_decl_list> init_declarator_list
-%type  <decl_spec> storage_class_specifier type_specifier type_qualifier function_specifier /* alignment_specifier */
+%type  <decl_spec> /* storage_class_specifier */ type_specifier type_qualifier /* function_specifier alignment_specifier */
 %type  <decl_specs> declaration_specifiers type_qualifier_list
 %type  <decl> declaration
 %type  <func_def> function_definition
@@ -331,15 +331,15 @@ declaration
 	;
 
 declaration_specifiers
-	: storage_class_specifier declaration_specifiers {
-	  $$ = $2;
-	  $$->add_child_front($1);
-	}
-	| storage_class_specifier {
-	  $$ = new declaration_specifiers_n();
-	  $$->add_child($1);
-	}
-	| type_specifier declaration_specifiers {
+//	: storage_class_specifier declaration_specifiers {
+//	  $$ = $2;
+//	  $$->add_child_front($1);
+//	}
+//	| storage_class_specifier {
+//	  $$ = new declaration_specifiers_n();
+//	  $$->add_child($1);
+//	}
+	: type_specifier declaration_specifiers {
 	  $$ = $2;
 	  $$->add_child_front($1);
 	}
@@ -355,14 +355,14 @@ declaration_specifiers
     $$ = new declaration_specifiers_n();
     $$->add_child($1);
   }
-	| function_specifier declaration_specifiers {
-	  $$ = $2;
-	  $$->add_child_front($1);
-	}
-	| function_specifier {
-	  $$ = new declaration_specifiers_n();
-	  $$->add_child($1);
-	}
+//	| function_specifier declaration_specifiers {
+//	  $$ = $2;
+//	  $$->add_child_front($1);
+//	}
+//	| function_specifier {
+//	  $$ = new declaration_specifiers_n();
+//	  $$->add_child($1);
+//	}
 //	| alignment_specifier declaration_specifiers
 //	| alignment_specifier
 	;
@@ -383,28 +383,28 @@ init_declarator
 	: declarator { $$ = new init_declarator_n($1); }
 	;
 
-storage_class_specifier
-//	: TYPEDEF { $$ = new declaration_specifier_n(specifier::TYPEDEF); }	/* identifiers must be flagged as TYPEDEF_NAME */
-	: EXTERN { $$ = new declaration_specifier_n(specifier::EXTERN); }
-	| STATIC { $$ = new declaration_specifier_n(specifier::STATIC); }
-	| THREAD_LOCAL { $$ = new declaration_specifier_n(specifier::THREAD_LOCAL); }
-	| AUTO { $$ = new declaration_specifier_n(specifier::AUTO); }
-	| REGISTER { $$ = new declaration_specifier_n(specifier::RESTRICT); }
-	;
+//storage_class_specifier
+//	: TYPEDEF { $$ = new declaration_specifier_n(specifier_t::TYPEDEF); }	/* identifiers must be flagged as TYPEDEF_NAME */
+//	| EXTERN { $$ = new declaration_specifier_n(specifier_t::EXTERN); }
+//	| STATIC { $$ = new declaration_specifier_n(specifier_t::STATIC); }
+//	| THREAD_LOCAL { $$ = new declaration_specifier_n(specifier_t::THREAD_LOCAL); }
+//	| AUTO { $$ = new declaration_specifier_n(specifier_t::AUTO); }
+//	| REGISTER { $$ = new declaration_specifier_n(specifier_t::RESTRICT); }
+//	;
 
 type_specifier
-	: VOID { $$ = new declaration_specifier_n(specifier::VOID); }
-	| CHAR { $$ = new declaration_specifier_n(specifier::CHAR); }
-	| SHORT { $$ = new declaration_specifier_n(specifier::SHORT); }
-	| INT { $$ = new declaration_specifier_n(specifier::INT); }
-	| LONG { $$ = new declaration_specifier_n(specifier::LONG); }
-	| FLOAT { $$ = new declaration_specifier_n(specifier::FLOAT); }
-	| DOUBLE { $$ = new declaration_specifier_n(specifier::DOUBLE); }
-	| SIGNED { $$ = new declaration_specifier_n(specifier::SIGNED); }
-	| UNSIGNED { $$ = new declaration_specifier_n(specifier::UNSIGNED); }
-	| BOOL { $$ = new declaration_specifier_n(specifier::BOOL); }
-	| COMPLEX { $$ = new declaration_specifier_n(specifier::COMPLEX); }
-	| IMAGINARY { $$ = new declaration_specifier_n(specifier::IMAGINARY); }	  	/* non-mandated extension */
+	: VOID { $$ = new declaration_specifier_n(specifier_t::VOID); }
+	| CHAR { $$ = new declaration_specifier_n(specifier_t::CHAR); }
+	| SHORT { $$ = new declaration_specifier_n(specifier_t::SHORT); }
+	| INT { $$ = new declaration_specifier_n(specifier_t::INT); }
+	| LONG { $$ = new declaration_specifier_n(specifier_t::LONG); }
+	| FLOAT { $$ = new declaration_specifier_n(specifier_t::FLOAT); }
+	| DOUBLE { $$ = new declaration_specifier_n(specifier_t::DOUBLE); }
+	| SIGNED { $$ = new declaration_specifier_n(specifier_t::SIGNED); }
+	| UNSIGNED { $$ = new declaration_specifier_n(specifier_t::UNSIGNED); }
+//	| BOOL { $$ = new declaration_specifier_n(specifier_t::BOOL); }
+//	| COMPLEX { $$ = new declaration_specifier_n(specifier_t::COMPLEX); }
+//	| IMAGINARY { $$ = new declaration_specifier_n(specifier_t::IMAGINARY); }	  	/* non-mandated extension */
 //	| atomic_type_specifier
 //	| struct_or_union_specifier
 //	| enum_specifier
@@ -474,16 +474,16 @@ type_specifier
 //	;
 
 type_qualifier
-	: CONST { $$ = new declaration_specifier_n(specifier::CONST); }
-	| RESTRICT { $$ = new declaration_specifier_n(specifier::RESTRICT); }
-	| VOLATILE { $$ = new declaration_specifier_n(specifier::VOLATILE); }
-	| ATOMIC { $$ = new declaration_specifier_n(specifier::ATOMIC); }
+	: CONST { $$ = new declaration_specifier_n(specifier_t::CONST); }
+//	| RESTRICT { $$ = new declaration_specifier_n(specifier_t::RESTRICT); }
+//	| VOLATILE { $$ = new declaration_specifier_n(specifier_t::VOLATILE); }
+//	| ATOMIC { $$ = new declaration_specifier_n(specifier_t::ATOMIC); }
 	;
 
-function_specifier
-	: INLINE { $$ = new declaration_specifier_n(specifier::INLINE); }
-	| NORETURN { $$ = new declaration_specifier_n(specifier::NORETURN); }
-	;
+//function_specifier
+//	: INLINE { $$ = new declaration_specifier_n(specifier_t::INLINE); }
+//	| NORETURN { $$ = new declaration_specifier_n(specifier_t::NORETURN); }
+//	;
 
 //alignment_specifier
 //	: ALIGNAS '(' type_name ')'

@@ -5,24 +5,10 @@
 #include <vector>
 
 #include "common.h"
+#include "c_type.h"
+#include "symbol_table.h"
 
 using namespace std;
-
-// Enum for declaration specifiers
-enum class specifier {
-  // storage class specifiers
-  STORAGE_CLASS_SPECIFIER_START, TYPEDEF, EXTERN, STATIC, THREAD_LOCAL, AUTO, REGISTER,
-  STORAGE_CLASS_SPECIFIER_END,
-  // type specifiers
-  TYPE_SPECIFIER_START, VOID, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE, SIGNED, UNSIGNED, BOOL,
-  COMPLEX, IMAGINARY, STRUCT, UNION, ENUM, TYPE_SPECIFIER_END,
-  // type qualfiers
-  TYPE_QUALIFIER_START, CONST, RESTRICT, VOLATILE, ATOMIC, TYPE_QUALIFIER_END,
-  // function specifiers
-  FUNCTION_SPECIFIER_START, INLINE, NORETURN, FUNCTION_SPECIFIER_END,
-  // alignment Specifiers
-  ALIGNAS
-};
 
 class ast_n
 {
@@ -58,21 +44,62 @@ private:
   string m_str;
 };
 
+// Enum for declaration specifiers
+enum class specifier_t {
+  // storage class specifiers
+  STORAGE_CLASS_SPECIFIER_START, TYPEDEF, EXTERN, STATIC, THREAD_LOCAL, AUTO, REGISTER,
+  STORAGE_CLASS_SPECIFIER_END,
+  // type specifiers
+  TYPE_SPECIFIER_START, VOID, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE, SIGNED, UNSIGNED, BOOL,
+  COMPLEX, IMAGINARY, STRUCT, UNION, ENUM, TYPE_SPECIFIER_END,
+  // type qualfiers
+  TYPE_QUALIFIER_START, CONST, RESTRICT, VOLATILE, ATOMIC, TYPE_QUALIFIER_END,
+  // function specifiers
+  FUNCTION_SPECIFIER_START, INLINE, NORETURN, FUNCTION_SPECIFIER_END,
+  // alignment Specifiers
+  ALIGNAS
+};
+
 class declaration_specifier_n : public ast_n
 {
 public:
-  declaration_specifier_n(specifier declaration_specifier) :
+  declaration_specifier_n(specifier_t declaration_specifier) :
     m_declaration_specifier(declaration_specifier)
   { }
-  string to_string_ast(string prefix="") const;
 
-  specifier get_declaration_specifier() const { return m_declaration_specifier; }
-  bool is_type_qualifier() {
-    return m_declaration_specifier > specifier::TYPE_QUALIFIER_START &&
-           m_declaration_specifier < specifier::TYPE_QUALIFIER_END;
+  bool is_storage_class_specifier() const
+  {
+    return m_declaration_specifier > specifier_t::STORAGE_CLASS_SPECIFIER_START &&
+           m_declaration_specifier < specifier_t::STORAGE_CLASS_SPECIFIER_END;
   }
+  bool is_type_specifier() const
+  {
+    return m_declaration_specifier > specifier_t::TYPE_SPECIFIER_START &&
+           m_declaration_specifier < specifier_t::TYPE_SPECIFIER_END;
+  }
+  bool is_base_type_specifier() const
+  {
+    return m_declaration_specifier == specifier_t::VOID ||
+           m_declaration_specifier == specifier_t::CHAR ||
+           m_declaration_specifier == specifier_t::SHORT ||
+           m_declaration_specifier == specifier_t::INT ||
+           m_declaration_specifier == specifier_t::FLOAT ||
+           m_declaration_specifier == specifier_t::DOUBLE;
+  }
+  bool is_type_qualifier() const
+  {
+    return m_declaration_specifier > specifier_t::TYPE_QUALIFIER_START &&
+           m_declaration_specifier < specifier_t::TYPE_QUALIFIER_END;
+  }
+  bool is_function_specifier() const
+  {
+    return m_declaration_specifier > specifier_t::FUNCTION_SPECIFIER_START &&
+           m_declaration_specifier < specifier_t::FUNCTION_SPECIFIER_END;
+  }
+  string to_string_ast(string prefix="") const;
+  specifier_t get_declaration_specifier() const { return m_declaration_specifier; }
 private:
-  specifier m_declaration_specifier;
+  specifier_t m_declaration_specifier;
 };
 
 class declaration_specifiers_n : public list_n<declaration_specifier_n>
@@ -80,6 +107,8 @@ class declaration_specifiers_n : public list_n<declaration_specifier_n>
 public:
   declaration_specifiers_n() : list_n<declaration_specifier_n>() { }
   declaration_specifiers_n(vector<declaration_specifier_n*> l) : list_n<declaration_specifier_n>(l) { }
+
+  c_type_t* declaration_specifiers_get_c_type() const;
   string to_string_ast(string prefix="") const;
 };
 
@@ -111,15 +140,8 @@ class declarator_n;
 class parameter_declaration_n : public ast_n
 {
 public:
-  parameter_declaration_n(declaration_specifiers_n* declaration_specifiers) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_declarator(nullptr)
-  { }
   parameter_declaration_n(declaration_specifiers_n* declaration_specifiers,
-                          declarator_n* declarator) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_declarator(declarator)
-  { }
+                          declarator_n* declarator = nullptr);
   string to_string_ast(string prefix="") const;
 private:
   declaration_specifiers_n* m_declaration_specifiers;
@@ -227,15 +249,8 @@ public:
 class declaration_n : public ast_n
 {
 public:
-  declaration_n(declaration_specifiers_n* declaration_specifiers) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_init_declarator_list(nullptr)
-  { }
   declaration_n(declaration_specifiers_n* declaration_specifiers,
-                init_declarator_list_n* init_declarator_list) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_init_declarator_list(init_declarator_list)
-  { }
+                init_declarator_list_n* init_declarator_list = nullptr);
   string to_string_ast(string prefix="") const;
 private:
   declaration_specifiers_n* m_declaration_specifiers;
@@ -565,11 +580,7 @@ class function_definition_n : public ast_n
 public:
   function_definition_n(declaration_specifiers_n* declaration_specifiers,
                         declarator_n* declarator,
-                        compound_statement_n* compound_statement) :
-    m_declaration_specifiers(declaration_specifiers),
-    m_declarator(declarator),
-    m_compound_statement(compound_statement)
-  { }
+                        compound_statement_n* compound_statement);
   string to_string_ast(string prefix="") const;
 private:
   declaration_specifiers_n* m_declaration_specifiers;
@@ -601,22 +612,26 @@ public:
   translation_unit_n(string filename) :
     list_n<external_declaration_n>(),
     m_filename(filename),
-    m_output_filename(this->generate_output_filename())
+    m_output_filename(this->generate_output_filename()),
+    m_base_table(new symbol_table_t())
   { }
   translation_unit_n(string filename, string output_filename) :
     list_n<external_declaration_n>(),
     m_filename(filename),
-    m_output_filename(output_filename)
+    m_output_filename(output_filename),
+    m_base_table(new symbol_table_t())
   { }
   translation_unit_n(vector<external_declaration_n*> l, string filename) :
     list_n<external_declaration_n>(l),
     m_filename(filename),
-    m_output_filename(this->generate_output_filename())
+    m_output_filename(this->generate_output_filename()),
+    m_base_table(new symbol_table_t())
   { }
   translation_unit_n(vector<external_declaration_n*> l, string filename, string output_filename) :
     list_n<external_declaration_n>(l),
     m_filename(filename),
-    m_output_filename(output_filename)
+    m_output_filename(output_filename),
+    m_base_table(new symbol_table_t())
   { }
 
   void llvm_codegen() const;
@@ -628,6 +643,7 @@ public:
     return this->m_filename.substr(0, this->m_filename.size() - 2) + ".ll";
   }
 private:
+  symbol_table_t* m_base_table;
   string m_filename;
   string m_output_filename;
 };

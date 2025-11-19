@@ -16,12 +16,18 @@ CFLAGS := \
 					-lfl \
 					`llvm-config --cxxflags --ldflags --system-libs --libs core`
 
-COMMON_DEPS := ast.h \
+COMMON_DEPS := \
+							 ast.h \
 							 common.h \
+							 c_type.h \
+							 symbol_table.h \
 							 lex.h \
 							 parse.h
 
-CC_LIBS := ast_printer.cpp \
+CC_LIBS := \
+					 ast.cpp \
+					 ast_printer.cpp \
+					 c_type.cpp \
 					 llvm_codegen.cpp \
 					 c.tab.cpp \
 					 c.lex.cpp \
